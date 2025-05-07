@@ -1,4 +1,4 @@
-package com.vincentramdhanie.twod.game.graphics;
+package com.niravramdhanie.twod.game.graphics;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;

@@ -1,6 +1,5 @@
-package com.vincentramdhanie.twod.game.utils;
+package com.niravramdhanie.twod.game.utils;
 
-import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -9,6 +8,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 public class ResourceLoader {
     // Cache loaded resources to avoid reloading the same resource multiple times

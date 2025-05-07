@@ -1,10 +1,10 @@
-package com.vincentramdhanie.twod.game.input;
-
-import com.vincentramdhanie.twod.game.core.GameStateManager;
+package com.niravramdhanie.twod.game.input;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+
+import com.niravramdhanie.twod.game.core.GameStateManager;
 
 public class MouseHandler implements MouseListener, MouseMotionListener {
     private int mouseX;

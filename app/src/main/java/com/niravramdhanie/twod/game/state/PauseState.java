@@ -1,13 +1,13 @@
-package com.vincentramdhanie.twod.game.state;
-
-import com.vincentramdhanie.twod.game.core.GameStateManager;
-import com.vincentramdhanie.twod.game.ui.Button;
+package com.niravramdhanie.twod.game.state;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.niravramdhanie.twod.game.core.GameStateManager;
+import com.niravramdhanie.twod.game.ui.Button;
 
 public class PauseState extends GameState {
     private List<Button> buttons;

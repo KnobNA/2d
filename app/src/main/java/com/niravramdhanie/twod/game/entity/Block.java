@@ -1,9 +1,10 @@
-package com.vincentramdhanie.twod.game.entity;
+package com.niravramdhanie.twod.game.entity;
 
-import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import com.vincentramdhanie.twod.game.utils.ResourceLoader;
+
+import com.niravramdhanie.twod.game.utils.ResourceLoader;
 
 public class Block extends Entity {
     private BufferedImage blockImage;

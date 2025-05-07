@@ -1,13 +1,13 @@
-package com.vincentramdhanie.twod.game.entity;
+package com.niravramdhanie.twod.game.entity;
 
-import com.vincentramdhanie.twod.game.graphics.Animation;
-import com.vincentramdhanie.twod.game.graphics.SpriteSheet;
-import com.vincentramdhanie.twod.game.utils.ResourceLoader;
-
-import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
+
+import com.niravramdhanie.twod.game.graphics.Animation;
+import com.niravramdhanie.twod.game.graphics.SpriteSheet;
+import com.niravramdhanie.twod.game.utils.ResourceLoader;
 
 public class BallPlayer extends Entity {
     // Movement flags

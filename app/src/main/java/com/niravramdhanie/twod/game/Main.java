@@ -1,7 +1,8 @@
-package com.vincentramdhanie.twod.game;
+package com.niravramdhanie.twod.game;
 
-import com.vincentramdhanie.twod.game.core.Game;    
 import javax.swing.SwingUtilities;
+
+import com.niravramdhanie.twod.game.core.Game;
 
 public class Main {
     public static void main(String[] args) {

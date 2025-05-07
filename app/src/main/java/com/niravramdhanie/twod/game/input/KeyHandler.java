@@ -1,9 +1,9 @@
-package com.vincentramdhanie.twod.game.input;
-
-import com.vincentramdhanie.twod.game.core.GameStateManager;
+package com.niravramdhanie.twod.game.input;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
+import com.niravramdhanie.twod.game.core.GameStateManager;
 
 public class KeyHandler implements KeyListener {
     private boolean[] keys;

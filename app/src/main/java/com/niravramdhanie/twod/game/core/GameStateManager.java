@@ -1,15 +1,15 @@
-package com.vincentramdhanie.twod.game.core;
-
-import com.vincentramdhanie.twod.game.state.GameState;
-import com.vincentramdhanie.twod.game.state.MenuState;
-import com.vincentramdhanie.twod.game.state.PlayState;
-import com.vincentramdhanie.twod.game.state.PauseState;
-import com.vincentramdhanie.twod.game.input.KeyHandler;
-import com.vincentramdhanie.twod.game.input.MouseHandler;
+package com.niravramdhanie.twod.game.core;
 
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.niravramdhanie.twod.game.input.KeyHandler;
+import com.niravramdhanie.twod.game.input.MouseHandler;
+import com.niravramdhanie.twod.game.state.GameState;
+import com.niravramdhanie.twod.game.state.MenuState;
+import com.niravramdhanie.twod.game.state.PauseState;
+import com.niravramdhanie.twod.game.state.PlayState;
 
 public class GameStateManager {
     private List<GameState> gameStates;

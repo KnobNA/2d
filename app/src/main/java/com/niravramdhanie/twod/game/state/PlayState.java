@@ -1,23 +1,32 @@
-package com.vincentramdhanie.twod.game.state;
+package com.niravramdhanie.twod.game.state;
 
-import com.vincentramdhanie.twod.game.core.GameStateManager;
-import com.vincentramdhanie.twod.game.entity.BallPlayer;
-import com.vincentramdhanie.twod.game.entity.Block;
-
-import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class PlayState extends GameState {
+import com.niravramdhanie.twod.game.core.GameStateManager;
+import com.niravramdhanie.twod.game.entity.BallPlayer;
+import com.niravramdhanie.twod.game.entity.Block;
+import com.niravramdhanie.twod.game.entity.Button;
+import com.niravramdhanie.twod.game.entity.Button.ButtonAction;
+import com.niravramdhanie.twod.game.entity.Button.ButtonActionListener;
+
+public class PlayState extends GameState implements ButtonActionListener {
     private BallPlayer player;
     private List<Block> blocks;
+    private List<Button> buttons;
     private int screenWidth;
     private int screenHeight;
     private Random random;
     private boolean initialized = false;
+    
+    // Game state for button actions
+    private boolean doorOpen = false;
+    private int itemsSpawned = 0;
+    private boolean platformActive = false;
     
     public PlayState(GameStateManager gsm, int screenWidth, int screenHeight) {
         super(gsm);
@@ -44,6 +53,10 @@ public class PlayState extends GameState {
         blocks = new ArrayList<>();
         createBlocks(10); // Create 10 random blocks
         
+        // Create buttons
+        buttons = new ArrayList<>();
+        createButtons();
+        
         try {
             // Create player in the lower middle of the screen
             int playerSize = 32;
@@ -59,6 +72,39 @@ public class PlayState extends GameState {
             System.err.println("Error initializing player: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    private void createButtons() {
+        // Create different types of buttons
+        int buttonWidth = 32;
+        int buttonHeight = 8;
+        
+        // Door Button (top left area)
+        Button doorButton = new Button(100, 100, buttonWidth, buttonHeight, ButtonAction.OPEN_DOOR);
+        doorButton.setActionValue(1); // Door ID
+        doorButton.setActionListener(this);
+        buttons.add(doorButton);
+        
+        // Items Button (top right area)
+        Button itemsButton = new Button(screenWidth - 150, 100, buttonWidth, buttonHeight, ButtonAction.SPAWN_ITEMS);
+        itemsButton.setActionValue(3); // Number of items to spawn
+        itemsButton.setColors(new Color(0, 200, 0), new Color(0, 100, 0)); // Green button
+        itemsButton.setActionListener(this);
+        buttons.add(itemsButton);
+        
+        // Platform Button (bottom left area)
+        Button platformButton = new Button(150, screenHeight - 150, buttonWidth, buttonHeight, ButtonAction.TOGGLE_PLATFORM);
+        platformButton.setActionValue(1); // Platform ID
+        platformButton.setColors(new Color(0, 0, 220), new Color(0, 0, 100)); // Blue button
+        platformButton.setActionListener(this);
+        buttons.add(platformButton);
+        
+        // Trap Button (bottom right area)
+        Button trapButton = new Button(screenWidth - 100, screenHeight - 100, buttonWidth, buttonHeight, ButtonAction.TRIGGER_TRAP);
+        trapButton.setActionValue(2); // Trap ID
+        trapButton.setColors(new Color(220, 220, 0), new Color(100, 100, 0)); // Yellow button
+        trapButton.setActionListener(this);
+        buttons.add(trapButton);
     }
     
     private void createBlocks(int numBlocks) {
@@ -114,7 +160,30 @@ public class PlayState extends GameState {
         for (Block block : blocks) {
             block.update();
         }
+        
+        // Update buttons
+        for (Button button : buttons) {
+            button.update();
+            
+            // Check player-button interactions
+            if (player.checkCollision(button)) {
+                // Player is on the button
+                button.playerOverlap(player);
+                
+                // Check for space key to activate the button
+                if (interactionKeyPressed) {
+                    interactionKeyPressed = false; // Reset flag after processing
+                }
+            } else {
+                if (button.isPressed()) {
+                    button.playerLeave();
+                }
+            }
+        }
     }
+    
+    // Flag to track if the interaction key was pressed
+    private boolean interactionKeyPressed = false;
     
     @Override
     public void render(Graphics2D g) {
@@ -126,6 +195,13 @@ public class PlayState extends GameState {
         if (blocks != null) {
             for (Block block : blocks) {
                 block.render(g);
+            }
+        }
+        
+        // Draw buttons
+        if (buttons != null) {
+            for (Button button : buttons) {
+                button.render(g);
             }
         }
         
@@ -147,6 +223,16 @@ public class PlayState extends GameState {
                 init();
             }
         }
+        
+        // Draw instructions
+        g.setColor(Color.WHITE);
+        g.drawString("Walk over buttons to press them", 10, 20);
+        
+        // Draw button action state information
+        g.setColor(Color.WHITE);
+        g.drawString("Door: " + (doorOpen ? "Open" : "Closed"), 10, 40);
+        g.drawString("Items: " + itemsSpawned, 10, 60);
+        g.drawString("Platform: " + (platformActive ? "Active" : "Inactive"), 10, 80);
     }
     
     @Override
@@ -161,6 +247,11 @@ public class PlayState extends GameState {
         if (k == KeyEvent.VK_D) player.setRight(true);
         if (k == KeyEvent.VK_W) player.setUp(true);
         if (k == KeyEvent.VK_S) player.setDown(true);
+        
+        // Interaction key
+        if (k == KeyEvent.VK_SPACE) {
+            interactionKeyPressed = true;
+        }
     }
     
     @Override
@@ -175,6 +266,11 @@ public class PlayState extends GameState {
         if (k == KeyEvent.VK_D) player.setRight(false);
         if (k == KeyEvent.VK_W) player.setUp(false);
         if (k == KeyEvent.VK_S) player.setDown(false);
+        
+        // Interaction key
+        if (k == KeyEvent.VK_SPACE) {
+            interactionKeyPressed = false;
+        }
     }
     
     @Override
@@ -190,5 +286,39 @@ public class PlayState extends GameState {
     @Override
     public void mouseMoved(int x, int y) {
         // Not used in this example
+    }
+    
+    @Override
+    public void onButtonPressed(Button button) {
+        // Handle button actions
+        switch (button.getActionType()) {
+            case OPEN_DOOR:
+                doorOpen = !doorOpen;
+                System.out.println("Door " + button.getActionValue() + " is now " + (doorOpen ? "open" : "closed"));
+                break;
+                
+            case SPAWN_ITEMS:
+                itemsSpawned += button.getActionValue();
+                System.out.println(button.getActionValue() + " items spawned, total: " + itemsSpawned);
+                break;
+                
+            case TOGGLE_PLATFORM:
+                platformActive = !platformActive;
+                System.out.println("Platform " + button.getActionValue() + " is now " + (platformActive ? "active" : "inactive"));
+                break;
+                
+            case TRIGGER_TRAP:
+                System.out.println("Trap " + button.getActionValue() + " triggered!");
+                // Could apply damage to player if in range
+                if (random.nextBoolean()) {
+                    player.damage(10);
+                    System.out.println("Player took 10 damage from trap! Health: " + player.getHealth());
+                }
+                break;
+                
+            case CUSTOM:
+                System.out.println("Custom action with value " + button.getActionValue() + " triggered");
+                break;
+        }
     }
 }

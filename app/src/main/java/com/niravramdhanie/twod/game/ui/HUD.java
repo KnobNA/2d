@@ -1,4 +1,4 @@
-package com.vincentramdhanie.twod.game.ui;
+package com.niravramdhanie.twod.game.ui;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -6,7 +6,7 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vincentramdhanie.twod.game.entity.BallPlayer;
+import com.niravramdhanie.twod.game.entity.BallPlayer;
 
 /**
  * Heads-Up Display for game information like health, score, etc.

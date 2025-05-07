@@ -1,9 +1,8 @@
-package com.vincentramdhanie.twod.game.ui;
+package com.niravramdhanie.twod.game.ui;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.event.MouseEvent;
 
 /**
  * Interactive button component for menus and UI

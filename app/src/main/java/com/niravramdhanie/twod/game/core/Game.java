@@ -1,11 +1,11 @@
-package com.vincentramdhanie.twod.game.core;
-
-import com.vincentramdhanie.twod.game.input.KeyHandler;
-import com.vincentramdhanie.twod.game.input.MouseHandler;
+package com.niravramdhanie.twod.game.core;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
+import com.niravramdhanie.twod.game.input.KeyHandler;
+import com.niravramdhanie.twod.game.input.MouseHandler;
 
 public class Game implements Runnable {
     private JFrame window;

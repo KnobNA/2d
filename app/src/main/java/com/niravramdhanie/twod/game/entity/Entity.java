@@ -1,9 +1,9 @@
-package com.vincentramdhanie.twod.game.entity;
-
-import com.vincentramdhanie.twod.game.utils.Vector2D;
+package com.niravramdhanie.twod.game.entity;
 
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+
+import com.niravramdhanie.twod.game.utils.Vector2D;
 
 public abstract class Entity {
     protected Vector2D position;

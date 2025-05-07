@@ -1,8 +1,4 @@
-package com.vincentramdhanie.twod.game.state;
-
-import com.vincentramdhanie.twod.game.core.GameStateManager;
-import com.vincentramdhanie.twod.game.ui.Button;
-import com.vincentramdhanie.twod.game.utils.ResourceLoader;
+package com.niravramdhanie.twod.game.state;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -10,6 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.niravramdhanie.twod.game.core.GameStateManager;
+import com.niravramdhanie.twod.game.ui.Button;
+import com.niravramdhanie.twod.game.utils.ResourceLoader;
 
 public class MenuState extends GameState {
     private BufferedImage background;

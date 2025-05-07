@@ -1,8 +1,8 @@
-package com.vincentramdhanie.twod.game.state;
-
-import com.vincentramdhanie.twod.game.core.GameStateManager;
+package com.niravramdhanie.twod.game.state;
 
 import java.awt.Graphics2D;
+
+import com.niravramdhanie.twod.game.core.GameStateManager;
 
 public abstract class GameState {
     protected GameStateManager gsm;

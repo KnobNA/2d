@@ -40,5 +40,5 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'com.vincentramdhanie.twod.game.Main'
+    mainClass = 'com.niravramdhanie.twod.game.Main'
 }
