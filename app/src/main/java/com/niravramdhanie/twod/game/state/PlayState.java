@@ -21,6 +21,7 @@ import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Door;
 import com.niravramdhanie.twod.game.entity.Entity;
+import com.niravramdhanie.twod.game.entity.WeightedButton;
 import com.niravramdhanie.twod.game.level.Level;
 import com.niravramdhanie.twod.game.utils.RewindManager;
 import com.niravramdhanie.twod.game.utils.TimerManager;
@@ -75,6 +76,9 @@ public class PlayState extends GameState {
     
     // Add this field at the class level
     private boolean doorWasClosed = false;
+    
+    // Add this field at the class level
+    private List<WeightedButton> weightedButtons = new ArrayList<>();
     
     public PlayState(GameStateManager gsm, int screenWidth, int screenHeight) {
         super(gsm);
@@ -318,32 +322,53 @@ public class PlayState extends GameState {
         int horizontalCells = level.getGrid().getHorizontalCells();
         int verticalCells = level.getGrid().getVerticalCells();
         
-        // Add first box (inactive) in the middle left
-        int box1GridX = horizontalCells / 4;
-        int box1GridY = verticalCells / 2;
+        // Add active box near the bottom left
+        int boxGridX = 2; // Two cells from the left border
+        int boxGridY = verticalCells - 3; // Two cells from the bottom
         
-        float box1X = level.getGrid().gridToScreenX(box1GridX);
-        float box1Y = level.getGrid().gridToScreenY(box1GridY);
+        float boxX = level.getGrid().gridToScreenX(boxGridX);
+        float boxY = level.getGrid().gridToScreenY(boxGridY);
         
-        Box box1 = new Box(box1X, box1Y, cellSize, cellSize, false, true);
-        level.addEntity(box1, box1GridX, box1GridY);
-        
-        // Add second box (active) in the middle right
-        int box2GridX = (horizontalCells * 3) / 4;
-        int box2GridY = verticalCells / 2;
-        
-        float box2X = level.getGrid().gridToScreenX(box2GridX);
-        float box2Y = level.getGrid().gridToScreenY(box2GridY);
-        
-        Box box2 = new Box(box2X, box2Y, cellSize, cellSize, true, true);
+        Box box = new Box(boxX, boxY, cellSize, cellSize, true, true);
         // Enable full rewind tracking for the active box
-        box2.setFullRewindTracking(true);
-        level.addEntity(box2, box2GridX, box2GridY);
+        box.setFullRewindTracking(true);
+        level.addEntity(box, boxGridX, boxGridY);
+        
+        // Clear existing weighted buttons
+        weightedButtons.clear();
+        
+        // Add three weighted buttons near the top
+        // First button - 1/3 from left
+        int button1GridX = horizontalCells / 3;
+        int button1GridY = 2; // Two cells from top
+        float button1X = level.getGrid().gridToScreenX(button1GridX);
+        float button1Y = level.getGrid().gridToScreenY(button1GridY);
+        WeightedButton button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, null);
+        level.addEntity(button1, button1GridX, button1GridY);
+        weightedButtons.add(button1);
+        
+        // Second button - 2/3 from left
+        int button2GridX = (horizontalCells * 2) / 3;
+        int button2GridY = 2; // Two cells from top
+        float button2X = level.getGrid().gridToScreenX(button2GridX);
+        float button2Y = level.getGrid().gridToScreenY(button2GridY);
+        WeightedButton button2 = new WeightedButton(button2X, button2Y, cellSize, cellSize, null);
+        level.addEntity(button2, button2GridX, button2GridY);
+        weightedButtons.add(button2);
+        
+        // Third button - near right wall
+        int button3GridX = horizontalCells - 2; // Two cells from right
+        int button3GridY = 2; // Two cells from top
+        float button3X = level.getGrid().gridToScreenX(button3GridX);
+        float button3Y = level.getGrid().gridToScreenY(button3GridY);
+        WeightedButton button3 = new WeightedButton(button3X, button3Y, cellSize, cellSize, null);
+        level.addEntity(button3, button3GridX, button3GridY);
+        weightedButtons.add(button3);
         
         // Update the rewind manager with the box list
         updateRewindManager();
         
-        System.out.println("Level 2 setup complete with two boxes");
+        System.out.println("Level 2 setup complete with one active box and three weighted buttons");
     }
     
     /**
@@ -442,6 +467,12 @@ public class PlayState extends GameState {
             // Update timed actions
             for (TimedAction timedAction : timedActions) {
                 timedAction.update();
+            }
+            
+            // Update weighted buttons
+            List<Box> boxes = getBoxesFromLevel();
+            for (WeightedButton button : weightedButtons) {
+                button.update(boxes);
             }
             
             // Update level (includes buttons, etc.)

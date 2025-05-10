@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.niravramdhanie.twod.game.entity.Block;
+import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Entity;
 import com.niravramdhanie.twod.game.utils.GridSystem;
@@ -159,8 +160,18 @@ public class Level {
      * @param g The Graphics2D object to render to
      */
     public void render(Graphics2D g) {
+        // First render all non-box entities
         for (Entity entity : entities) {
-            entity.render(g);
+            if (!(entity instanceof Box)) {
+                entity.render(g);
+            }
+        }
+        
+        // Then render all boxes
+        for (Entity entity : entities) {
+            if (entity instanceof Box) {
+                entity.render(g);
+            }
         }
     }
     
