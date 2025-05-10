@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 import com.niravramdhanie.twod.game.utils.ResourceLoader;
 
@@ -21,6 +22,8 @@ public class Box extends Block {
     // Box properties
     private boolean isActive; // Whether the box follows the rewind system
     private boolean isMovable; // Whether the box can be picked up
+    private boolean fullRewindTracking; // Whether to fully track all box movements during rewind
+    private boolean isRewinding; // Whether the box is currently being rewound
     
     // Visual properties
     private Color boxColor;
@@ -46,6 +49,8 @@ public class Box extends Block {
         this.isBeingCarried = false;
         this.isActive = isActive;
         this.isMovable = isMovable;
+        this.fullRewindTracking = false; // Default to simple rewind
+        this.isRewinding = false;
         this.carrier = null;
         
         // Default colors
@@ -161,6 +166,12 @@ public class Box extends Block {
      * @return True if the box was picked up, false if it can't be picked up
      */
     public boolean pickUp(float playerX, float playerY, Entity carrier) {
+        // If being rewound and player tries to pick up, cancel rewind
+        if (isRewinding && carrier != null) {
+            isRewinding = false;
+            System.out.println("Box rewind cancelled due to player pickup");
+        }
+        
         if (!isMovable || isBeingCarried) {
             return false;
         }
@@ -189,13 +200,18 @@ public class Box extends Block {
     
     /**
      * Picks up the box without a specific carrier reference.
+     * This is used for recorded pickup actions during rewind.
      * 
      * @param playerX The player's X position
      * @param playerY The player's Y position
      * @return True if the box was picked up, false if it can't be picked up
      */
     public boolean pickUp(float playerX, float playerY) {
-        return pickUp(playerX, playerY, null);
+        // Allow pickup without carrier during rewind (for recorded actions)
+        if (isRewinding) {
+            return pickUp(playerX, playerY, null);
+        }
+        return false;
     }
     
     /**
@@ -317,7 +333,7 @@ public class Box extends Block {
      */
     @Override
     public void setX(float x) {
-        if (!isBeingCarried) {
+        if (!isBeingCarried || isRewinding) {
             super.setX(x);
         }
     }
@@ -327,7 +343,7 @@ public class Box extends Block {
      */
     @Override
     public void setY(float y) {
-        if (!isBeingCarried) {
+        if (!isBeingCarried || isRewinding) {
             super.setY(y);
         }
     }
@@ -366,5 +382,67 @@ public class Box extends Block {
      */
     public void setRelativeY(float relativeY) {
         this.relativeY = relativeY;
+    }
+    
+    /**
+     * Gets whether the box tracks its full path during rewind or just handles carrying.
+     * 
+     * @return True if full tracking is enabled, false for simple carrying-only rewind
+     */
+    public boolean hasFullRewindTracking() {
+        return fullRewindTracking;
+    }
+    
+    /**
+     * Sets whether the box should track its full path during rewind or just handle carrying.
+     * <p>
+     * When true: The box's full movement history is tracked and replayed during rewind,
+     * and collisions are detected during rewind to prevent the box from passing through walls.
+     * <p>
+     * When false: The box is only affected by rewind when being carried, in which case
+     * it simply teleports with the player back to the beginning position.
+     * 
+     * @param fullRewindTracking True for full movement tracking, false for carrying-only
+     */
+    public void setFullRewindTracking(boolean fullRewindTracking) {
+        this.fullRewindTracking = fullRewindTracking;
+    }
+    
+    /**
+     * Checks for collision with other entities or blocks.
+     * Use for checking collision during rewind.
+     * 
+     * @param blocks List of blocks to check collision against
+     * @return True if a collision is detected, false otherwise
+     */
+    public boolean checkCollisionWithBlocks(List<Block> blocks) {
+        for (Block block : blocks) {
+            // Skip self
+            if (block == this) continue;
+            
+            // Check collision with block
+            if (checkCollision(block)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Sets whether the box is currently being rewound.
+     * 
+     * @param isRewinding Whether the box is being rewound
+     */
+    public void setRewinding(boolean isRewinding) {
+        this.isRewinding = isRewinding;
+    }
+    
+    /**
+     * Checks if the box is currently being rewound.
+     * 
+     * @return True if the box is being rewound, false otherwise
+     */
+    public boolean isRewinding() {
+        return isRewinding;
     }
 } 

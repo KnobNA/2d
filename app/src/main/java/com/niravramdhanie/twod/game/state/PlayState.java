@@ -73,6 +73,9 @@ public class PlayState extends GameState {
     private Box carriedBox = null;
     private List<Box> nearBoxes = new ArrayList<>();
     
+    // Add this field at the class level
+    private boolean doorWasClosed = false;
+    
     public PlayState(GameStateManager gsm, int screenWidth, int screenHeight) {
         super(gsm);
         this.screenWidth = screenWidth;
@@ -315,20 +318,32 @@ public class PlayState extends GameState {
         int horizontalCells = level.getGrid().getHorizontalCells();
         int verticalCells = level.getGrid().getVerticalCells();
         
-        // Add a movable, active box in the middle of level 2
-        int boxGridX = horizontalCells / 2;
-        int boxGridY = verticalCells / 2;
+        // Add first box (inactive) in the middle left
+        int box1GridX = horizontalCells / 4;
+        int box1GridY = verticalCells / 2;
         
-        float boxX = level.getGrid().gridToScreenX(boxGridX);
-        float boxY = level.getGrid().gridToScreenY(boxGridY);
+        float box1X = level.getGrid().gridToScreenX(box1GridX);
+        float box1Y = level.getGrid().gridToScreenY(box1GridY);
         
-        Box box = new Box(boxX, boxY, cellSize, cellSize, true, true);
-        level.addEntity(box, boxGridX, boxGridY);
+        Box box1 = new Box(box1X, box1Y, cellSize, cellSize, false, true);
+        level.addEntity(box1, box1GridX, box1GridY);
+        
+        // Add second box (active) in the middle right
+        int box2GridX = (horizontalCells * 3) / 4;
+        int box2GridY = verticalCells / 2;
+        
+        float box2X = level.getGrid().gridToScreenX(box2GridX);
+        float box2Y = level.getGrid().gridToScreenY(box2GridY);
+        
+        Box box2 = new Box(box2X, box2Y, cellSize, cellSize, true, true);
+        // Enable full rewind tracking for the active box
+        box2.setFullRewindTracking(true);
+        level.addEntity(box2, box2GridX, box2GridY);
         
         // Update the rewind manager with the box list
         updateRewindManager();
         
-        System.out.println("Level 2 setup complete");
+        System.out.println("Level 2 setup complete with two boxes");
     }
     
     /**
@@ -338,6 +353,10 @@ public class PlayState extends GameState {
         if (rewindManager != null) {
             List<Box> boxes = getBoxesFromLevel();
             rewindManager.setBoxes(boxes);
+            
+            // Provide the level blocks to the rewind manager for collision detection
+            List<Block> levelBlocks = level.getBlocks();
+            rewindManager.setLevelBlocks(levelBlocks);
         }
     }
     
@@ -381,6 +400,12 @@ public class PlayState extends GameState {
         
         // Update player blocks
         player.setBlocks(level.getBlocks());
+        
+        // Reset timer to 60 seconds
+        if (timerManager != null) {
+            timerManager.reset();
+            timerManager.start();
+        }
     }
     
     /**
@@ -919,11 +944,17 @@ public class PlayState extends GameState {
             blocks.add(door);
             doorAdded = true;
             
-            if (!doorWasInBlocks) {
+            // Only print message if the door state changed from open to closed
+            if (!doorWasClosed) {
                 System.out.println("Door collision enabled - door is closed");
+                doorWasClosed = true;
             }
         } else if (doorWasInBlocks) {
-            System.out.println("Door collision disabled - door is open");
+            // Only print message if the door state changed from closed to open
+            if (doorWasClosed) {
+                System.out.println("Door collision disabled - door is open");
+                doorWasClosed = false;
+            }
         }
         
         // Update player's collision blocks

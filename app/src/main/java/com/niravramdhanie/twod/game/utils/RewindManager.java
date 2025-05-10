@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import com.niravramdhanie.twod.game.entity.BallPlayer;
 import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Entity;
+import com.niravramdhanie.twod.game.entity.Block;
 
 /**
  * Manages the rewind feature for the game.
@@ -47,6 +49,8 @@ public class RewindManager {
     // Box state tracking
     private List<BoxState> initialBoxStates = new ArrayList<>();
     private List<Box> boxes = new ArrayList<>();
+    private Map<Box, List<BoxPositionRecord>> boxPositionHistory = new HashMap<>();
+    private List<Block> levelBlocks = new ArrayList<>();
     
     // Recorded actions
     private List<RecordedAction> recordedActions = new ArrayList<>();
@@ -82,6 +86,15 @@ public class RewindManager {
     }
     
     /**
+     * Sets the level blocks to use for collision detection during rewind.
+     * 
+     * @param blocks The list of level blocks
+     */
+    public void setLevelBlocks(List<Block> blocks) {
+        this.levelBlocks = new ArrayList<>(blocks);
+    }
+    
+    /**
      * Starts recording player actions and game state.
      */
     public void startRecording() {
@@ -92,6 +105,7 @@ public class RewindManager {
         initialDoorStates.clear();
         initialBoxStates.clear();
         currentToggleStates.clear();
+        boxPositionHistory.clear();
         
         // Record initial state
         playerStartX = player.getX();
@@ -204,6 +218,35 @@ public class RewindManager {
     }
     
     /**
+     * Records the current position of all active boxes.
+     * Should be called on each game tick.
+     */
+    public void recordBoxPositions() {
+        if (currentState != RewindState.RECORDING) {
+            return;
+        }
+        
+        long timestamp = System.currentTimeMillis() - recordingStartTime;
+        
+        for (Box box : boxes) {
+            if (box.isActive() && box.hasFullRewindTracking()) {
+                // Get or create the position history list for this box
+                List<BoxPositionRecord> positionHistory = boxPositionHistory.computeIfAbsent(box, k -> new ArrayList<>());
+                
+                // Record the current position and time
+                positionHistory.add(new BoxPositionRecord(
+                    timestamp,
+                    box.getX(),
+                    box.getY(),
+                    box.isBeingCarried()
+                ));
+                
+                System.out.println("Recorded box position at time " + timestamp + ": (" + box.getX() + ", " + box.getY() + ")");
+            }
+        }
+    }
+    
+    /**
      * Starts rewinding the game to the recorded state.
      */
     public void startRewinding() {
@@ -289,25 +332,28 @@ public class RewindManager {
      * Should be called on each game tick.
      */
     public void update() {
+        // If recording, record box positions
+        if (currentState == RewindState.RECORDING) {
+            recordBoxPositions();
+            return;
+        }
+        
         if (currentState != RewindState.REWINDING) {
             return;
         }
         
         // Calculate current time relative to rewind start
         long currentRelativeTime = System.currentTimeMillis() - rewindStartTime;
+        System.out.println("Current rewind time: " + currentRelativeTime);
+        
+        // Update box positions for boxes with full rewind tracking
+        updateBoxPositionsForRewind(currentRelativeTime);
         
         // Apply any actions that should occur at this time
         for (RecordedAction action : recordedActions) {
             if (action.timestamp <= currentRelativeTime && !action.applied) {
                 applyAction(action);
                 action.applied = true;
-                
-                // Add a small delay to make actions visually apparent
-                try {
-                    Thread.sleep(30);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
             }
         }
         
@@ -327,6 +373,54 @@ public class RewindManager {
             
             currentState = RewindState.IDLE;
             System.out.println("Rewind: Completed replay of all actions");
+        }
+    }
+    
+    /**
+     * Updates box positions during rewind based on recorded history.
+     * 
+     * @param currentRelativeTime The current time relative to the start of rewinding
+     */
+    private void updateBoxPositionsForRewind(long currentRelativeTime) {
+        for (Box box : boxes) {
+            if (!box.isActive() || !box.hasFullRewindTracking()) {
+                continue; // Skip inactive boxes
+            }
+            
+            List<BoxPositionRecord> positionHistory = boxPositionHistory.get(box);
+            if (positionHistory == null || positionHistory.isEmpty()) {
+                continue;
+            }
+            
+            // Find the exact position record for the current time
+            BoxPositionRecord currentRecord = null;
+            
+            // Find the record that matches or is closest to our current rewind time
+            for (BoxPositionRecord record : positionHistory) {
+                if (record.timestamp <= currentRelativeTime) {
+                    currentRecord = record;
+                } else {
+                    break;
+                }
+            }
+            
+            // If we're before the first record, use initial state
+            if (currentRecord == null) {
+                for (BoxState state : initialBoxStates) {
+                    if (state.box == box) {
+                        box.setX(state.x);
+                        box.setY(state.y);
+                        System.out.println("Using initial state: (" + state.x + ", " + state.y + ")");
+                        break;
+                    }
+                }
+                continue;
+            }
+            
+            // Set the box to the current record's position
+            box.setX(currentRecord.x);
+            box.setY(currentRecord.y);
+            System.out.println("Setting box position at time " + currentRelativeTime + ": (" + currentRecord.x + ", " + currentRecord.y + ")");
         }
     }
     
@@ -432,8 +526,11 @@ public class RewindManager {
             action.box.setX(action.boxX);
             action.box.setY(action.boxY);
             
-            // Then pick it up
+            // Then pick it up, but don't let it affect position updates during rewind
             action.box.pickUp(player.getX(), player.getY(), player);
+            
+            // Mark the box as being rewound so it can still be moved
+            action.box.setRewinding(true);
             
             System.out.println("Rewind: Applied box pickup at replay time " + 
                               action.timestamp + "ms, position (" + action.boxX + ", " + action.boxY + ")");
@@ -453,6 +550,9 @@ public class RewindManager {
             // Set the final position
             action.box.setX(action.boxX);
             action.box.setY(action.boxY);
+            
+            // Mark the box as no longer being rewound
+            action.box.setRewinding(false);
             
             System.out.println("Rewind: Applied box drop at replay time " + 
                               action.timestamp + "ms, position (" + action.boxX + ", " + action.boxY + ")");
@@ -536,6 +636,23 @@ public class RewindManager {
             this.y = y;
             this.isBeingCarried = isBeingCarried;
             this.carrier = carrier;
+        }
+    }
+    
+    /**
+     * Class to track box position history for rewind.
+     */
+    private static class BoxPositionRecord {
+        long timestamp;
+        float x;
+        float y;
+        boolean isBeingCarried;
+        
+        BoxPositionRecord(long timestamp, float x, float y, boolean isBeingCarried) {
+            this.timestamp = timestamp;
+            this.x = x;
+            this.y = y;
+            this.isBeingCarried = isBeingCarried;
         }
     }
     
