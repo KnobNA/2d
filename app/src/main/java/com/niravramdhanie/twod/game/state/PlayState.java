@@ -365,10 +365,57 @@ public class PlayState extends GameState {
         level.addEntity(button3, button3GridX, button3GridY);
         weightedButtons.add(button3);
         
+        // Add three doors
+        // First door - under first button
+        int door1GridX = button1GridX;
+        int door1GridY = button1GridY + 7; // Seven cells below button (was +2)
+        float door1X = level.getGrid().gridToScreenX(door1GridX);
+        float door1Y = level.getGrid().gridToScreenY(door1GridY);
+        Door door1 = new Door(door1X, door1Y, cellSize, cellSize, "door1");
+        level.addEntity(door1, door1GridX, door1GridY);
+        doorController.registerDoor(door1);
+        
+        // Second door - under second button
+        int door2GridX = button2GridX;
+        int door2GridY = button2GridY + 7; // Seven cells below button (was +2)
+        float door2X = level.getGrid().gridToScreenX(door2GridX);
+        float door2Y = level.getGrid().gridToScreenY(door2GridY);
+        Door door2 = new Door(door2X, door2Y, cellSize, cellSize, "door2");
+        level.addEntity(door2, door2GridX, door2GridY);
+        doorController.registerDoor(door2);
+        
+        // Third door - under third button (level transition door)
+        int door3GridX = button3GridX;
+        int door3GridY = button3GridY + 7; // Seven cells below button (was +2)
+        float door3X = level.getGrid().gridToScreenX(door3GridX);
+        float door3Y = level.getGrid().gridToScreenY(door3GridY);
+        Door door3 = new Door(door3X, door3Y, cellSize, cellSize, "door3");
+        level.addEntity(door3, door3GridX, door3GridY);
+        doorController.registerDoor(door3);
+        
+        // Connect buttons to doors
+        // First button controls first door
+        DoorAction door1Action = new DoorAction("door1");
+        door1Action.setDoorStateChangeListener(doorController);
+        button1.setAction(door1Action);
+        
+        // Second button controls second door
+        DoorAction door2Action = new DoorAction("door2");
+        door2Action.setDoorStateChangeListener(doorController);
+        button2.setAction(door2Action);
+        
+        // Third button controls third door (level transition)
+        DoorAction door3Action = new DoorAction("door3");
+        door3Action.setDoorStateChangeListener(doorController);
+        button3.setAction(door3Action);
+        
+        // Set the level transition door
+        door = door3;
+        
         // Update the rewind manager with the box list
         updateRewindManager();
         
-        System.out.println("Level 2 setup complete with one active box and three weighted buttons");
+        System.out.println("Level 2 setup complete with one active box, three weighted buttons, and three doors");
     }
     
     /**
@@ -418,6 +465,8 @@ public class PlayState extends GameState {
         } else if (currentLevel == 2) {
             level.createLevel2();
             setupLevel2();
+        } else if (currentLevel == 3) {
+            level.createLevel3();
         }
         
         // Reset player position to starting position
@@ -645,26 +694,42 @@ public class PlayState extends GameState {
      * Checks if the player is entering an open door to trigger level transition
      */
     private void checkDoorEntry() {
-        if (player == null || door == null || !door.isOpen()) return;
+        if (player == null) return;
         
-        // Check if player is overlapping the door
-        float playerCenterX = player.getX() + player.getWidth() / 2;
-        float playerCenterY = player.getY() + player.getHeight() / 2;
-        float doorCenterX = door.getX() + door.getWidth() / 2;
-        float doorCenterY = door.getY() + door.getHeight() / 2;
+        // Get all doors from the level
+        List<Door> doors = new ArrayList<>();
+        for (Entity entity : level.getEntities()) {
+            if (entity instanceof Door) {
+                doors.add((Door) entity);
+            }
+        }
         
-        // Calculate distance between centers
-        float distance = (float) Math.sqrt(
-            Math.pow(playerCenterX - doorCenterX, 2) + 
-            Math.pow(playerCenterY - doorCenterY, 2)
-        );
-        
-        // If the player's center is close enough to the door's center
-        if (distance < player.getWidth() / 2) {
-            // Check which level we're on and transition accordingly
-            if (currentLevel == 1) {
-                System.out.println("Player entered the door! Transitioning to level 2...");
-                setLevelLayout(2);
+        // Check each door
+        for (Door currentDoor : doors) {
+            if (!currentDoor.isOpen()) continue;
+            
+            // Check if player is overlapping the door
+            float playerCenterX = player.getX() + player.getWidth() / 2;
+            float playerCenterY = player.getY() + player.getHeight() / 2;
+            float doorCenterX = currentDoor.getX() + currentDoor.getWidth() / 2;
+            float doorCenterY = currentDoor.getY() + currentDoor.getHeight() / 2;
+            
+            // Calculate distance between centers
+            float distance = (float) Math.sqrt(
+                Math.pow(playerCenterX - doorCenterX, 2) + 
+                Math.pow(playerCenterY - doorCenterY, 2)
+            );
+            
+            // If the player's center is close enough to the door's center
+            if (distance < player.getWidth() / 2) {
+                // Check which level we're on and transition accordingly
+                if (currentLevel == 1) {
+                    System.out.println("Player entered the door! Transitioning to level 2...");
+                    setLevelLayout(2);
+                } else if (currentLevel == 2 && currentDoor.getId().equals("door3")) {
+                    System.out.println("Player entered the level transition door! Transitioning to level 3...");
+                    setLevelLayout(3);
+                }
             }
         }
     }
@@ -961,28 +1026,34 @@ public class PlayState extends GameState {
      * Updates collision with the door based on its open/closed state
      */
     private void updateDoorCollision() {
-        if (door == null || player == null) return;
+        if (player == null) return;
         
         // Get current blocks from the level
         List<Block> blocks = new ArrayList<>(level.getBlocks());
         
-        // Remove the door from blocks if it's in there
-        boolean doorWasInBlocks = blocks.removeIf(block -> block.equals(door));
-        
-        // Add door only if it's closed
-        boolean doorAdded = false;
-        if (!door.isOpen()) {
-            blocks.add(door);
-            doorAdded = true;
-            
-            // Only print message if the door state changed from open to closed
-            if (!doorWasClosed) {
-                System.out.println("Door collision enabled - door is closed");
-                doorWasClosed = true;
+        // Get all doors from the level
+        List<Door> doors = new ArrayList<>();
+        for (Entity entity : level.getEntities()) {
+            if (entity instanceof Door) {
+                doors.add((Door) entity);
             }
-        } else if (doorWasInBlocks) {
-            // Only print message if the door state changed from closed to open
-            if (doorWasClosed) {
+        }
+        
+        // Remove all doors from blocks if they're in there
+        blocks.removeIf(block -> block instanceof Door);
+        
+        // Add doors only if they're closed
+        for (Door door : doors) {
+            if (!door.isOpen()) {
+                blocks.add(door);
+                
+                // Only print message if this is the main door and its state changed
+                if (door.equals(this.door) && !doorWasClosed) {
+                    System.out.println("Door collision enabled - door is closed");
+                    doorWasClosed = true;
+                }
+            } else if (door.equals(this.door) && doorWasClosed) {
+                // Only print message if this is the main door and its state changed
                 System.out.println("Door collision disabled - door is open");
                 doorWasClosed = false;
             }

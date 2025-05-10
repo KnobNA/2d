@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.util.List;
 
 import com.niravramdhanie.twod.game.actions.Action;
+import com.niravramdhanie.twod.game.actions.DoorAction;
 
 /**
  * A button that can only be activated by boxes being placed on top of it.
@@ -51,8 +52,20 @@ public class WeightedButton extends Button {
         if (isBoxOnTop && !wasActivated) {
             // Use the parent class's activate method directly to bypass our override
             super.activate();
+            
+            // If this is a door action, set the door to open
+            Action action = getAction();
+            if (action instanceof DoorAction) {
+                ((DoorAction) action).setDoorOpen(true);
+            }
         } else if (!isBoxOnTop && wasActivated) {
             deactivate();
+            
+            // If this is a door action, set the door to closed
+            Action action = getAction();
+            if (action instanceof DoorAction) {
+                ((DoorAction) action).setDoorOpen(false);
+            }
         }
     }
     

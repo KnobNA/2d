@@ -146,6 +146,48 @@ public class Level {
     }
     
     /**
+     * Creates a simple level 3 layout with just border blocks
+     */
+    public void createLevel3() {
+        // Clear any existing blocks
+        entities.clear();
+        
+        // Get grid dimensions
+        int horizontalCells = grid.getHorizontalCells();
+        int verticalCells = grid.getVerticalCells();
+        int cellSize = grid.getCellSize();
+        
+        // Create border blocks
+        // Top and bottom borders
+        for (int x = 0; x < horizontalCells; x++) {
+            // Top border
+            float topX = grid.gridToScreenX(x);
+            float topY = grid.gridToScreenY(0);
+            entities.add(new Block(topX, topY, cellSize, cellSize));
+            
+            // Bottom border
+            float bottomX = grid.gridToScreenX(x);
+            float bottomY = grid.gridToScreenY(verticalCells - 1);
+            entities.add(new Block(bottomX, bottomY, cellSize, cellSize));
+        }
+        
+        // Left and right borders
+        for (int y = 1; y < verticalCells - 1; y++) {
+            // Left border
+            float leftX = grid.gridToScreenX(0);
+            float leftY = grid.gridToScreenY(y);
+            entities.add(new Block(leftX, leftY, cellSize, cellSize));
+            
+            // Right border
+            float rightX = grid.gridToScreenX(horizontalCells - 1);
+            float rightY = grid.gridToScreenY(y);
+            entities.add(new Block(rightX, rightY, cellSize, cellSize));
+        }
+        
+        System.out.println("Level 3 created with border blocks");
+    }
+    
+    /**
      * Updates all entities in the level.
      */
     public void update() {
