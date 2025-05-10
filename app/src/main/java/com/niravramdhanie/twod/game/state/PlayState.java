@@ -263,6 +263,7 @@ public class PlayState extends GameState {
                 // Ensure door stays open if permanently activated
                 if (door != null && !door.isOpen()) {
                     door.open();
+                    updateDoorCollision(); // Immediately update door collision when opening
                     System.out.println("Door will remain open permanently!");
                 }
                 return;
@@ -276,7 +277,17 @@ public class PlayState extends GameState {
                 // Manually update the door state to ensure it closes
                 if (door != null && door.isOpen()) {
                     door.close();
+                    updateDoorCollision(); // Immediately update door collision when closing
                     System.out.println("Door closed - both buttons must be pressed simultaneously!");
+                }
+            } else {
+                // Check if the door should open (if both buttons are now active)
+                if (multiButtonAction.isPermanentlyActivated() || multiButtonAction.updateButtonState(buttonId, true)) {
+                    if (door != null && !door.isOpen()) {
+                        door.open();
+                        updateDoorCollision(); // Immediately update door collision when opening
+                        System.out.println("Door opened - both buttons pressed simultaneously!");
+                    }
                 }
             }
         }
@@ -414,6 +425,9 @@ public class PlayState extends GameState {
             // First, update box collision information before player movement
             updateBoxCollision();
             
+            // Update door collision before player movement
+            updateDoorCollision();
+            
             // Second, update player position (this will handle collisions)
             if (player != null) {
                 player.update();
@@ -432,11 +446,10 @@ public class PlayState extends GameState {
             if (multiButtonAction != null && multiButtonAction.isPermanentlyActivated() && door != null && !door.isOpen()) {
                 // Force the door to open if it's not already open
                 door.open();
+                // Immediately update door collision
+                updateDoorCollision();
                 System.out.println("Door permanently opened! It will not close again.");
             }
-            
-            // Update door collision if necessary
-            updateDoorCollision();
             
             // Check if player is entering an open door (level transition)
             checkDoorEntry();
@@ -898,11 +911,19 @@ public class PlayState extends GameState {
         List<Block> blocks = new ArrayList<>(level.getBlocks());
         
         // Remove the door from blocks if it's in there
-        blocks.removeIf(block -> block.equals(door));
+        boolean doorWasInBlocks = blocks.removeIf(block -> block.equals(door));
         
         // Add door only if it's closed
+        boolean doorAdded = false;
         if (!door.isOpen()) {
             blocks.add(door);
+            doorAdded = true;
+            
+            if (!doorWasInBlocks) {
+                System.out.println("Door collision enabled - door is closed");
+            }
+        } else if (doorWasInBlocks) {
+            System.out.println("Door collision disabled - door is open");
         }
         
         // Update player's collision blocks
