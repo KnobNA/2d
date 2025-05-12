@@ -1106,6 +1106,10 @@ public class PlayState extends GameState {
             System.out.println("Switching to level 2");
             setLevelLayout(2);
         }
+        else if (k == KeyEvent.VK_3) {
+            System.out.println("Switching to level 3");
+            setLevelLayout(3);
+        }
     }
     
     @Override

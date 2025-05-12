@@ -142,7 +142,40 @@ public class Level {
         // Add border blocks for level 2
         addBorderBlocks();
         
-        // Additional level 2 specific layout will be added here later
+        // Get grid dimensions
+        int horizontalCells = grid.getHorizontalCells();
+        int verticalCells = grid.getVerticalCells();
+        int cellSize = grid.getCellSize();
+        
+        // Create horizontal wall from (10,6) to the end of row 6
+        for (int x = 10; x < horizontalCells - 1; x++) {
+            float wallX = grid.gridToScreenX(x);
+            float wallY = grid.gridToScreenY(6);
+            entities.add(new Block(wallX, wallY, cellSize, cellSize));
+        }
+        
+        // Create vertical wall from (10,6) down to the bottom
+        // Skip the space for the door (around row 6)
+        for (int y = 6; y < verticalCells - 1; y++) {
+            // Skip the position where door1 is located (7 cells below button1)
+            if (y == 9) continue; // Skip this position to leave space for door1
+            
+            float wallX = grid.gridToScreenX(10);
+            float wallY = grid.gridToScreenY(y);
+            entities.add(new Block(wallX, wallY, cellSize, cellSize));
+        }
+        
+        // Create vertical wall from (20,6) down to the bottom
+        for (int y = 6; y < verticalCells - 1; y++) {
+            // Skip the position where door2 is located (7 cells below button2)
+            if (y == 9) continue; // Skip this position to leave space for door2
+            
+            float wallX = grid.gridToScreenX(20);
+            float wallY = grid.gridToScreenY(y);
+            entities.add(new Block(wallX, wallY, cellSize, cellSize));
+        }
+        
+        System.out.println("Level 2 created with border blocks and walls");
     }
     
     /**

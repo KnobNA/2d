@@ -27,8 +27,26 @@ public abstract class Entity {
         return new Rectangle((int)position.x, (int)position.y, width, height);
     }
     
+    /**
+     * Gets a collision rectangle that's slightly smaller than the entity's bounds.
+     * This ensures collisions stay within the grid cell.
+     * 
+     * @return A Rectangle representing the collision bounds
+     */
+    public Rectangle getCollisionBounds() {
+        // Make the collision rectangle 90% of the entity's size
+        int collisionWidth = (int)(width * 0.9f);
+        int collisionHeight = (int)(height * 0.9f);
+        
+        // Center the collision rectangle within the entity's bounds
+        int collisionX = (int)position.x + (width - collisionWidth) / 2;
+        int collisionY = (int)position.y + (height - collisionHeight) / 2;
+        
+        return new Rectangle(collisionX, collisionY, collisionWidth, collisionHeight);
+    }
+    
     public boolean checkCollision(Entity other) {
-        return getBounds().intersects(other.getBounds());
+        return getCollisionBounds().intersects(other.getCollisionBounds());
     }
     
     // Getters and setters
