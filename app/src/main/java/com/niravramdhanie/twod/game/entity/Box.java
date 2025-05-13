@@ -53,16 +53,17 @@ public class Box extends Block {
         this.isRewinding = false;
         this.carrier = null;
         
-        // Default colors
+        // Default colors (used as fallback if image loading fails)
         this.boxColor = new Color(139, 69, 19); // Brown
         this.activeBoxColor = new Color(205, 133, 63); // Peru (lighter brown)
         
         try {
-            // Load box images (fallback to colors if images can't be loaded)
+            // Load box image from sprites directory
             boxImage = ResourceLoader.loadImage("/sprites/box.png");
-            activeBoxImage = ResourceLoader.loadImage("/sprites/box_active.png");
+            // Use the same image for both active and inactive states
+            activeBoxImage = boxImage;
         } catch (Exception e) {
-            System.err.println("Error loading box images: " + e.getMessage());
+            System.err.println("Error loading box image: " + e.getMessage());
             boxImage = null;
             activeBoxImage = null;
         }
