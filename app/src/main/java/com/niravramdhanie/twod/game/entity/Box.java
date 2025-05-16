@@ -253,9 +253,22 @@ public class Box extends Block {
     }
     
     /**
+     * Handles the end of recording while the box is being held.
+     * This ensures the box is properly dropped when recording ends.
+     */
+    public void handleRecordingEnd() {
+        if (isBeingCarried) {
+            System.out.println("Recording ended while box was being held - dropping box");
+            drop();
+        }
+    }
+    
+    /**
      * Drops the box at its current position.
      */
     public void drop() {
+        if (!isBeingCarried) return;
+        
         isBeingCarried = false;
         carrier = null;
         

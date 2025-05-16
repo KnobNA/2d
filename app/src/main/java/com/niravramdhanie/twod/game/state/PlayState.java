@@ -515,7 +515,19 @@ public class PlayState extends GameState {
             
             // Update rewind manager
             if (rewindManager != null) {
+                // Check if rewind just started
+                boolean wasRewinding = rewindManager.getCurrentState() == RewindManager.RewindState.REWINDING;
                 rewindManager.update();
+                boolean isRewinding = rewindManager.getCurrentState() == RewindManager.RewindState.REWINDING;
+                
+                // If rewind just started, handle any carried boxes
+                if (!wasRewinding && isRewinding) {
+                    // Drop any carried box
+                    if (carriedBox != null) {
+                        System.out.println("Rewind started - dropping carried box");
+                        dropCarriedBox();
+                    }
+                }
             }
             
             // Update timed actions
