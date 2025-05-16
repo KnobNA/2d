@@ -455,6 +455,11 @@ public class PlayState extends GameState {
         // Clear the level
         level.clearLevel();
         
+        // Clear the door controller and door actions
+        doorController = new DoorController();
+        timedActions.clear();
+        multiButtonAction = null;
+        
         // Update current level
         currentLevel = layoutType;
         
