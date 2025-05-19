@@ -25,13 +25,10 @@ public class BallPlayer extends Entity {
     private int maxHealth;
     
     // Animations
-    private BufferedImage spriteImage; // Cache the original sprite image
-    private SpriteSheet spriteSheet;
+    private BufferedImage idleSprite; // Cache the idle sprite
+    private BufferedImage rightSprite; // Cache the right movement sprite
     private Animation idleAnim;
-    private Animation leftAnim;
     private Animation rightAnim;
-    private Animation upAnim;
-    private Animation downAnim;
     private Animation currentAnim;
     private boolean spritesLoaded = false; // Flag to track if sprites are loaded
     
@@ -69,38 +66,26 @@ public class BallPlayer extends Entity {
     
     private void initAnimations() {
         try {
-            // Load sprite sheet
-            spriteImage = ResourceLoader.loadImage("/sprites/ball.png");
+            // Load character sprites
+            idleSprite = ResourceLoader.loadImage("/sprites/character_idle.png");
+            rightSprite = ResourceLoader.loadImage("/sprites/character_right.png");
             
-            if (spriteImage != null) {
-                System.out.println("Player sprite loaded successfully: " + spriteImage.getWidth() + "x" + spriteImage.getHeight());
+            if (idleSprite != null && rightSprite != null) {
+                System.out.println("Player sprites loaded successfully");
                 
-                // Based on the file command output, the ball.png is a single 32x32 sprite
-                // Not a sprite sheet as previously assumed
+                // Create animations
+                idleAnim = new Animation();
+                idleAnim.addFrame(idleSprite, 150);
                 
-                // Create a single frame animation for all directions
-                Animation singleFrameAnim = new Animation();
-                singleFrameAnim.addFrame(spriteImage, 150);
+                rightAnim = new Animation();
+                rightAnim.addFrame(rightSprite, 150);
                 
-                if (singleFrameAnim.hasFrames()) {
-                    // Use the same animation for all directions since it's just one image
-                    idleAnim = singleFrameAnim;
-                    leftAnim = singleFrameAnim;
-                    rightAnim = singleFrameAnim;
-                    upAnim = singleFrameAnim;
-                    downAnim = singleFrameAnim;
-                    
-                    // Set default animation
-                    currentAnim = idleAnim;
-                    spritesLoaded = true;
-                    System.out.println("Player animation initialized successfully with single sprite");
-                } else {
-                    System.err.println("Failed to create animation from ball sprite");
-                    createEmptyAnimations();
-                }
+                // Set default animation
+                currentAnim = idleAnim;
+                spritesLoaded = true;
+                System.out.println("Player animations initialized successfully");
             } else {
-                System.err.println("Failed to load player sprite image");
-                // Create empty animations
+                System.err.println("Failed to load player sprite images");
                 createEmptyAnimations();
             }
         } catch (Exception e) {
@@ -115,10 +100,7 @@ public class BallPlayer extends Entity {
         spritesLoaded = false;
         // Create basic animations with null frames as a fallback
         idleAnim = new Animation();
-        leftAnim = new Animation();
         rightAnim = new Animation();
-        upAnim = new Animation();
-        downAnim = new Animation();
         currentAnim = idleAnim;
     }
     
@@ -187,15 +169,9 @@ public class BallPlayer extends Entity {
         }
         
         // Set appropriate animation based on movement direction
-        if (velocity.x < 0 && Math.abs(velocity.x) > Math.abs(velocity.y)) {
-            if (spritesLoaded) currentAnim = leftAnim;
-        } else if (velocity.x > 0 && Math.abs(velocity.x) > Math.abs(velocity.y)) {
+        if (velocity.x > 0) {
             if (spritesLoaded) currentAnim = rightAnim;
-        } else if (velocity.y < 0 && Math.abs(velocity.y) > Math.abs(velocity.x)) {
-            if (spritesLoaded) currentAnim = upAnim;
-        } else if (velocity.y > 0 && Math.abs(velocity.y) > Math.abs(velocity.x)) {
-            if (spritesLoaded) currentAnim = downAnim;
-        } else if (velocity.x == 0 && velocity.y == 0) {
+        } else {
             if (spritesLoaded) currentAnim = idleAnim;
         }
         
@@ -256,10 +232,7 @@ public class BallPlayer extends Entity {
                 } else {
                     System.err.println("Current animation frame is null: " + 
                         (currentAnim == idleAnim ? "idle" : 
-                         currentAnim == leftAnim ? "left" : 
-                         currentAnim == rightAnim ? "right" : 
-                         currentAnim == upAnim ? "up" : 
-                         currentAnim == downAnim ? "down" : "unknown"));
+                         currentAnim == rightAnim ? "right" : "unknown"));
                 }
             } else {
                 System.err.println("Cannot render sprite: spritesLoaded=" + spritesLoaded + 
