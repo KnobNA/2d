@@ -33,13 +33,14 @@ public class PlayState extends GameState {
     private int screenHeight;
     private Random random;
     private boolean initialized = false;
+    private boolean gameOver = false;  // New flag for game over state
     
     // Grid cell size (can be easily changed)
     private static final int GRID_CELL_SIZE = 32;
     
     // Timer variables
     private long startTime;
-    private int timerDuration = 60; // Duration in seconds
+    private int timerDuration = 10; // Duration in seconds
     private Font timerFont;
     
     // Timer manager
@@ -512,6 +513,33 @@ public class PlayState extends GameState {
         try {
             // Update timer
             timerManager.update();
+            
+            // Check for game over condition
+            if (!gameOver && timerManager.getTime() <= 0) {
+                gameOver = true;
+                player.triggerExplosion();
+            }
+            
+            // If game over and explosion finished, return to home screen
+            if (gameOver && player.isExplosionFinished()) {
+                // Reactivate player movement
+                player.setLeft(false);
+                player.setRight(false);
+                player.setUp(false);
+                player.setDown(false);
+                
+                // Reset game over state
+                gameOver = false;
+                
+                // Return to menu state
+                gsm.setState(GameStateManager.MENU_STATE);
+                return;
+            }
+            
+            // Don't update game state if game over
+            if (gameOver) {
+                return;
+            }
             
             // Update rewind manager
             if (rewindManager != null) {
@@ -1082,6 +1110,9 @@ public class PlayState extends GameState {
     
     @Override
     public void keyPressed(int k) {
+        // Don't process input if game over
+        if (gameOver) return;
+        
         // Handle player movement
         if (player != null) {
             if (k == KeyEvent.VK_LEFT || k == KeyEvent.VK_A) {

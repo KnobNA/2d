@@ -36,7 +36,12 @@ public class BallPlayer extends Entity {
     private Animation upAnim;
     private Animation downAnim;
     private Animation currentAnim;
+    private Animation explosionAnim;   // New explosion animation
     private boolean spritesLoaded = false; // Flag to track if sprites are loaded
+    private boolean isExploding = false;   // Flag to track explosion state
+    private javax.sound.sampled.Clip explosionSound; // Sound clip for explosion
+    private long explosionStartTime;       // Time when explosion started
+    private static final long EXPLOSION_DURATION = 1000; // Explosion duration in milliseconds
     
     // Game properties
     private int screenWidth;
@@ -78,6 +83,20 @@ public class BallPlayer extends Entity {
             leftSprite = ResourceLoader.loadImage("/sprites/Character_Left.png");
             upSprite = ResourceLoader.loadImage("/sprites/Character_Up.png");
             downSprite = ResourceLoader.loadImage("/sprites/Character_Down.png");
+            
+            // Load explosion animation
+            explosionAnim = new Animation();
+            explosionAnim.addFrame(ResourceLoader.loadImage("/sprites/ExplosionGIF1.gif"), 100);
+            
+            // Load explosion sound
+            try {
+                javax.sound.sampled.AudioInputStream audioIn = javax.sound.sampled.AudioSystem.getAudioInputStream(
+                    getClass().getResource("/sprites/Explosion1.mp3"));
+                explosionSound = javax.sound.sampled.AudioSystem.getClip();
+                explosionSound.open(audioIn);
+            } catch (Exception e) {
+                System.err.println("Error loading explosion sound: " + e.getMessage());
+            }
             
             if (idleSprite != null && rightSprite != null && leftSprite != null && 
                 upSprite != null && downSprite != null) {
@@ -157,8 +176,41 @@ public class BallPlayer extends Entity {
         return carriedBox != null;
     }
     
+    /**
+     * Triggers the explosion sequence
+     */
+    public void triggerExplosion() {
+        if (!isExploding) {
+            isExploding = true;
+            currentAnim = explosionAnim;
+            currentAnim.reset();
+            explosionStartTime = System.currentTimeMillis();
+            
+            // Play explosion sound
+            if (explosionSound != null) {
+                explosionSound.setFramePosition(0);
+                explosionSound.start();
+            }
+        }
+    }
+    
+    /**
+     * Checks if the explosion animation has finished
+     */
+    public boolean isExplosionFinished() {
+        return isExploding && (System.currentTimeMillis() - explosionStartTime >= EXPLOSION_DURATION);
+    }
+    
     @Override
     public void update() {
+        // If exploding, only update the animation
+        if (isExploding) {
+            if (currentAnim != null) {
+                currentAnim.update();
+            }
+            return;
+        }
+
         // Track previous animation for transition checks
         Animation previousAnim = currentAnim;
         
@@ -257,7 +309,18 @@ public class BallPlayer extends Entity {
             if (spritesLoaded && currentAnim != null) {
                 BufferedImage currentFrame = currentAnim.getCurrentFrame();
                 if (currentFrame != null) {
-                    g.drawImage(currentFrame, (int)position.x, (int)position.y, width, height, null);
+                    if (isExploding) {
+                        // Scale up the explosion sprite to 4x size
+                        int explosionWidth = width * 4;  // Quadruple the width
+                        int explosionHeight = height * 4; // Quadruple the height
+                        // Center the explosion on the player's position
+                        int explosionX = (int)position.x - (explosionWidth - width) / 2;
+                        int explosionY = (int)position.y - (explosionHeight - height) / 2;
+                        g.drawImage(currentFrame, explosionX, explosionY, explosionWidth, explosionHeight, null);
+                    } else {
+                        // Normal sprite rendering
+                        g.drawImage(currentFrame, (int)position.x, (int)position.y, width, height, null);
+                    }
                     return;
                 } else {
                     System.err.println("Current animation frame is null: " + 
