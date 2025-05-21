@@ -27,8 +27,14 @@ public class BallPlayer extends Entity {
     // Animations
     private BufferedImage idleSprite; // Cache the idle sprite
     private BufferedImage rightSprite; // Cache the right movement sprite
+    private BufferedImage leftSprite;  // Cache the left movement sprite
+    private BufferedImage upSprite;    // Cache the up movement sprite
+    private BufferedImage downSprite;  // Cache the down movement sprite
     private Animation idleAnim;
     private Animation rightAnim;
+    private Animation leftAnim;
+    private Animation upAnim;
+    private Animation downAnim;
     private Animation currentAnim;
     private boolean spritesLoaded = false; // Flag to track if sprites are loaded
     
@@ -67,10 +73,14 @@ public class BallPlayer extends Entity {
     private void initAnimations() {
         try {
             // Load character sprites
-            idleSprite = ResourceLoader.loadImage("/sprites/character_idle.png");
-            rightSprite = ResourceLoader.loadImage("/sprites/character_right.png");
+            idleSprite = ResourceLoader.loadImage("/sprites/Character_Idle.png");
+            rightSprite = ResourceLoader.loadImage("/sprites/Character_Right.png");
+            leftSprite = ResourceLoader.loadImage("/sprites/Character_Left.png");
+            upSprite = ResourceLoader.loadImage("/sprites/Character_Up.png");
+            downSprite = ResourceLoader.loadImage("/sprites/Character_Down.png");
             
-            if (idleSprite != null && rightSprite != null) {
+            if (idleSprite != null && rightSprite != null && leftSprite != null && 
+                upSprite != null && downSprite != null) {
                 System.out.println("Player sprites loaded successfully");
                 
                 // Create animations
@@ -79,6 +89,15 @@ public class BallPlayer extends Entity {
                 
                 rightAnim = new Animation();
                 rightAnim.addFrame(rightSprite, 150);
+                
+                leftAnim = new Animation();
+                leftAnim.addFrame(leftSprite, 150);
+                
+                upAnim = new Animation();
+                upAnim.addFrame(upSprite, 150);
+                
+                downAnim = new Animation();
+                downAnim.addFrame(downSprite, 150);
                 
                 // Set default animation
                 currentAnim = idleAnim;
@@ -101,6 +120,9 @@ public class BallPlayer extends Entity {
         // Create basic animations with null frames as a fallback
         idleAnim = new Animation();
         rightAnim = new Animation();
+        leftAnim = new Animation();
+        upAnim = new Animation();
+        downAnim = new Animation();
         currentAnim = idleAnim;
     }
     
@@ -169,10 +191,18 @@ public class BallPlayer extends Entity {
         }
         
         // Set appropriate animation based on movement direction
-        if (velocity.x > 0) {
-            if (spritesLoaded) currentAnim = rightAnim;
-        } else {
-            if (spritesLoaded) currentAnim = idleAnim;
+        if (spritesLoaded) {
+            if (velocity.x > 0) {
+                currentAnim = rightAnim;
+            } else if (velocity.x < 0) {
+                currentAnim = leftAnim;
+            } else if (velocity.y < 0) {
+                currentAnim = upAnim;
+            } else if (velocity.y > 0) {
+                currentAnim = downAnim;
+            } else {
+                currentAnim = idleAnim;
+            }
         }
         
         // If animation changed, reset the animation
@@ -232,7 +262,9 @@ public class BallPlayer extends Entity {
                 } else {
                     System.err.println("Current animation frame is null: " + 
                         (currentAnim == idleAnim ? "idle" : 
-                         currentAnim == rightAnim ? "right" : "unknown"));
+                         currentAnim == rightAnim ? "right" : 
+                         currentAnim == leftAnim ? "left" : 
+                         currentAnim == upAnim ? "up" : "down"));
                 }
             } else {
                 System.err.println("Cannot render sprite: spritesLoaded=" + spritesLoaded + 
