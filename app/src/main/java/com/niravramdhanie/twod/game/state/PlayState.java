@@ -40,7 +40,7 @@ public class PlayState extends GameState {
     
     // Timer variables
     private long startTime;
-    private int timerDuration = 5; // Duration in seconds
+    private int timerDuration = 60; // Duration in seconds
     private Font timerFont;
     
     // Timer manager
@@ -420,6 +420,292 @@ public class PlayState extends GameState {
     }
     
     /**
+     * Sets up the level 3 layout with rooms and end door
+     */
+    private void setupLevel3() {
+        int cellSize = level.getGrid().getCellSize();
+        int horizontalCells = level.getGrid().getHorizontalCells();
+        int verticalCells = level.getGrid().getVerticalCells();
+        
+        // Create the end door in the middle of the right side (same as level 1)
+        int doorGridX = horizontalCells - 2; // One cell from the right border
+        int doorGridY = verticalCells / 2;
+        
+        float doorX = level.getGrid().gridToScreenX(doorGridX);
+        float doorY = level.getGrid().gridToScreenY(doorGridY);
+        door = new Door(doorX, doorY, cellSize, cellSize, "end_door");
+        level.addEntity(door, doorGridX, doorGridY);
+        
+        // Register door with controller
+        doorController.registerDoor(door);
+        
+        // Create a room in the top right corner (expanded to touch outer walls)
+        int roomStartX = horizontalCells - 6; // 6 cells from right edge (expanded)
+        int roomStartY = 1; // 1 cell from top edge (expanded)
+        
+        // Create room walls
+        // Top wall
+        for (int x = roomStartX; x < roomStartX + 6; x++) {
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(roomStartY);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, roomStartY);
+        }
+        
+        // Bottom wall
+        for (int x = roomStartX; x < roomStartX + 6; x++) {
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(roomStartY + 5);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, roomStartY + 5);
+        }
+        
+        // Left wall (with door opening)
+        for (int y = roomStartY; y < roomStartY + 6; y++) {
+            // Skip the middle block for the door
+            if (y == roomStartY + 3) continue;
+            
+            float blockX = level.getGrid().gridToScreenX(roomStartX);
+            float blockY = level.getGrid().gridToScreenY(y);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, roomStartX, y);
+        }
+        
+        // Right wall
+        for (int y = roomStartY; y < roomStartY + 6; y++) {
+            float blockX = level.getGrid().gridToScreenX(roomStartX + 5);
+            float blockY = level.getGrid().gridToScreenY(y);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, roomStartX + 5, y);
+        }
+        
+        // Add a door to the room (on the left wall)
+        int roomDoorGridX = roomStartX;
+        int roomDoorGridY = roomStartY + 3; // Middle of left wall
+        float roomDoorX = level.getGrid().gridToScreenX(roomDoorGridX);
+        float roomDoorY = level.getGrid().gridToScreenY(roomDoorGridY);
+        Door roomDoor = new Door(roomDoorX, roomDoorY, cellSize, cellSize, "room_door");
+        level.addEntity(roomDoor, roomDoorGridX, roomDoorGridY);
+        doorController.registerDoor(roomDoor);
+        
+        // Create two connected rooms at the bottom left (shifted left by one tile)
+        // First room (left room)
+        int leftRoomStartX = 1; // 1 cell from left edge (shifted left)
+        int leftRoomStartY = verticalCells - 8; // 6 cells from bottom edge
+        
+        // Create left room walls
+        // Top wall (with door)
+        for (int x = leftRoomStartX; x < leftRoomStartX + 6; x++) {
+            // Skip the middle block for the door
+            if (x == leftRoomStartX + 3) continue;
+            
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(leftRoomStartY);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, leftRoomStartY);
+        }
+        
+        // Bottom wall
+        for (int x = leftRoomStartX; x < leftRoomStartX + 6; x++) {
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(leftRoomStartY + 6);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, leftRoomStartY + 6);
+        }
+        
+        // Left wall
+        for (int y = leftRoomStartY; y < leftRoomStartY + 7; y++) {
+            float blockX = level.getGrid().gridToScreenX(leftRoomStartX);
+            float blockY = level.getGrid().gridToScreenY(y);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, leftRoomStartX, y);
+        }
+        
+        // Right wall (shared with second room)
+        for (int y = leftRoomStartY; y < leftRoomStartY + 7; y++) {
+            float blockX = level.getGrid().gridToScreenX(leftRoomStartX + 6);
+            float blockY = level.getGrid().gridToScreenY(y);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, leftRoomStartX + 6, y);
+        }
+        
+        // Add door to left room (on top wall)
+        int leftRoomDoorGridX = leftRoomStartX + 3;
+        int leftRoomDoorGridY = leftRoomStartY;
+        float leftRoomDoorX = level.getGrid().gridToScreenX(leftRoomDoorGridX);
+        float leftRoomDoorY = level.getGrid().gridToScreenY(leftRoomDoorGridY);
+        Door leftRoomDoor = new Door(leftRoomDoorX, leftRoomDoorY, cellSize, cellSize, "left_room_door");
+        level.addEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY);
+        doorController.registerDoor(leftRoomDoor);
+        
+        // Second room (right room)
+        int rightRoomStartX = leftRoomStartX + 6; // Connected to left room
+        int rightRoomStartY = leftRoomStartY; // Same Y as left room
+        
+        // Create right room walls
+        // Top wall (with door)
+        for (int x = rightRoomStartX; x < rightRoomStartX + 6; x++) {
+            // Skip the middle block for the door
+            if (x == rightRoomStartX + 3) continue;
+            
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(rightRoomStartY);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, rightRoomStartY);
+        }
+        
+        // Bottom wall
+        for (int x = rightRoomStartX; x < rightRoomStartX + 6; x++) {
+            float blockX = level.getGrid().gridToScreenX(x);
+            float blockY = level.getGrid().gridToScreenY(rightRoomStartY + 6);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, x, rightRoomStartY + 6);
+        }
+        
+        // Right wall
+        for (int y = rightRoomStartY; y < rightRoomStartY + 7; y++) {
+            float blockX = level.getGrid().gridToScreenX(rightRoomStartX + 6);
+            float blockY = level.getGrid().gridToScreenY(y);
+            Block block = new Block(blockX, blockY, cellSize, cellSize);
+            level.addEntity(block, rightRoomStartX + 6, y);
+        }
+        
+        // Add door to right room (on top wall)
+        int rightRoomDoorGridX = rightRoomStartX + 3;
+        int rightRoomDoorGridY = rightRoomStartY;
+        float rightRoomDoorX = level.getGrid().gridToScreenX(rightRoomDoorGridX);
+        float rightRoomDoorY = level.getGrid().gridToScreenY(rightRoomDoorGridY);
+        Door rightRoomDoor = new Door(rightRoomDoorX, rightRoomDoorY, cellSize, cellSize, "right_room_door");
+        level.addEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY);
+        doorController.registerDoor(rightRoomDoor);
+        
+        // Add three weighted buttons
+        // First button (top left) - controls left bottom room door
+        int button1GridX = 3; // 3 cells from left edge
+        int button1GridY = 3; // 3 cells from top
+        float button1X = level.getGrid().gridToScreenX(button1GridX);
+        float button1Y = level.getGrid().gridToScreenY(button1GridY);
+        WeightedButton button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, null);
+        level.addEntity(button1, button1GridX, button1GridY);
+        weightedButtons.add(button1);
+        
+        // Create door action for left bottom room
+        DoorAction leftRoomDoorAction = new DoorAction("left_room_door");
+        leftRoomDoorAction.setDoorStateChangeListener(doorController);
+        button1.setAction(leftRoomDoorAction);
+        
+        // Second button (top right of first) - controls right bottom room door
+        int button2GridX = button1GridX + 5; // 5 cells to the right of first button
+        int button2GridY = button1GridY; // Same Y as first button
+        float button2X = level.getGrid().gridToScreenX(button2GridX);
+        float button2Y = level.getGrid().gridToScreenY(button2GridY);
+        WeightedButton button2 = new WeightedButton(button2X, button2Y, cellSize, cellSize, null);
+        level.addEntity(button2, button2GridX, button2GridY);
+        weightedButtons.add(button2);
+        
+        // Create door action for right bottom room
+        DoorAction rightRoomDoorAction = new DoorAction("right_room_door");
+        rightRoomDoorAction.setDoorStateChangeListener(doorController);
+        button2.setAction(rightRoomDoorAction);
+        
+        // Third button (bottom right) - controls top right room door
+        int button3GridX = horizontalCells - 4; // 4 cells from right edge
+        int button3GridY = verticalCells - 4; // 4 cells from bottom
+        float button3X = level.getGrid().gridToScreenX(button3GridX);
+        float button3Y = level.getGrid().gridToScreenY(button3GridY);
+        WeightedButton button3 = new WeightedButton(button3X, button3Y, cellSize, cellSize, null);
+        level.addEntity(button3, button3GridX, button3GridY);
+        weightedButtons.add(button3);
+        
+        // Create door action for top right room
+        DoorAction topRoomDoorAction = new DoorAction("room_door");
+        topRoomDoorAction.setDoorStateChangeListener(doorController);
+        button3.setAction(topRoomDoorAction);
+        
+        // Add two movable boxes
+        // First box in the middle of the level
+        int centerBoxGridX = horizontalCells / 2;
+        int centerBoxGridY = verticalCells / 2;
+        float centerBoxX = level.getGrid().gridToScreenX(centerBoxGridX);
+        float centerBoxY = level.getGrid().gridToScreenY(centerBoxGridY);
+        Box centerBox = new Box(centerBoxX, centerBoxY, cellSize, cellSize, true, true);
+        centerBox.setFullRewindTracking(true);
+        level.addEntity(centerBox, centerBoxGridX, centerBoxGridY);
+        
+        // Second box in the middle of the right bottom room
+        int rightRoomBoxGridX = rightRoomStartX + 3; // Middle of the room horizontally
+        int rightRoomBoxGridY = rightRoomStartY + 3; // Middle of the room vertically
+        float rightRoomBoxX = level.getGrid().gridToScreenX(rightRoomBoxGridX);
+        float rightRoomBoxY = level.getGrid().gridToScreenY(rightRoomBoxGridY);
+        Box rightRoomBox = new Box(rightRoomBoxX, rightRoomBoxY, cellSize, cellSize, true, true);
+        rightRoomBox.setFullRewindTracking(true);
+        level.addEntity(rightRoomBox, rightRoomBoxGridX, rightRoomBoxGridY);
+        
+        // Add fourth button inside top right room (controls left bottom room door)
+        int button4GridX = roomStartX + 1; // 1 cell from left wall of top right room
+        int button4GridY = roomStartY + 1; // 1 cell from top wall of top right room
+        float button4X = level.getGrid().gridToScreenX(button4GridX);
+        float button4Y = level.getGrid().gridToScreenY(button4GridY);
+        WeightedButton button4 = new WeightedButton(button4X, button4Y, cellSize, cellSize, null);
+        level.addEntity(button4, button4GridX, button4GridY);
+        weightedButtons.add(button4);
+        
+        // Connect button4 to the same door as button1 (left bottom room door)
+        button4.setAction(leftRoomDoorAction);
+        
+        // Add two blue weighted buttons for end door control
+        // First blue button (top right of top right room)
+        int blueButton1GridX = roomStartX + 4; // 4 cells from left wall of top right room
+        int blueButton1GridY = roomStartY + 1; // 1 cell from top wall of top right room
+        float blueButton1X = level.getGrid().gridToScreenX(blueButton1GridX);
+        float blueButton1Y = level.getGrid().gridToScreenY(blueButton1GridY);
+        WeightedButton blueButton1 = new WeightedButton(blueButton1X, blueButton1Y, cellSize, cellSize, null);
+        blueButton1.setColor(new Color(80, 80, 200)); // Blue when inactive
+        blueButton1.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
+        level.addEntity(blueButton1, blueButton1GridX, blueButton1GridY);
+        weightedButtons.add(blueButton1);
+        
+        // Second blue button (middle of left bottom room)
+        int blueButton2GridX = leftRoomStartX + 3; // Middle of left bottom room horizontally
+        int blueButton2GridY = leftRoomStartY + 3; // Middle of left bottom room vertically
+        float blueButton2X = level.getGrid().gridToScreenX(blueButton2GridX);
+        float blueButton2Y = level.getGrid().gridToScreenY(blueButton2GridY);
+        WeightedButton blueButton2 = new WeightedButton(blueButton2X, blueButton2Y, cellSize, cellSize, null);
+        blueButton2.setColor(new Color(80, 80, 200)); // Blue when inactive
+        blueButton2.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
+        level.addEntity(blueButton2, blueButton2GridX, blueButton2GridY);
+        weightedButtons.add(blueButton2);
+        
+        // Create a multi-button action for the end door
+        DoorAction endDoorAction = new DoorAction("end_door");
+        endDoorAction.setDoorStateChangeListener(doorController);
+        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, false); // false = not permanent
+        
+        // Create timed actions for both blue buttons
+        TimedAction blueButton1Action = createTimedButtonAction("blue_button1", 1000); // 1 second
+        TimedAction blueButton2Action = createTimedButtonAction("blue_button2", 1000); // 1 second
+        
+        // Set the actions for the blue buttons
+        blueButton1.setAction(blueButton1Action);
+        blueButton2.setAction(blueButton2Action);
+        
+        // Add the timed actions to the list for updates
+        timedActions.add(blueButton1Action);
+        timedActions.add(blueButton2Action);
+        
+        // Start with all doors closed
+        door.close();
+        roomDoor.close();
+        leftRoomDoor.close();
+        rightRoomDoor.close();
+        
+        // Update the rewind manager with the boxes
+        updateRewindManager();
+        
+        System.out.println("Level 3 setup complete with three rooms, end door, and two movable boxes");
+    }
+    
+    /**
      * Updates the RewindManager with the current boxes in the level
      */
     private void updateRewindManager() {
@@ -473,6 +759,7 @@ public class PlayState extends GameState {
             setupLevel2();
         } else if (currentLevel == 3) {
             level.createLevel3();
+            setupLevel3();
         }
         
         // Reset player position to starting position
@@ -615,7 +902,52 @@ public class PlayState extends GameState {
      */
     private void updateCarriedBox() {
         if (carriedBox != null) {
-            carriedBox.updateCarriedPosition(player.getX(), player.getY());
+            // Get the box's current position
+            float boxX = player.getX();
+            float boxY = player.getY();
+            
+            // Get the cell size from the level's grid
+            int cellSize = level.getGrid().getCellSize();
+            
+            // Check if box is near any doorways
+            List<Door> doors = new ArrayList<>();
+            for (Entity entity : level.getEntities()) {
+                if (entity instanceof Door) {
+                    doors.add((Door) entity);
+                }
+            }
+            
+            // Default to full size
+            int boxWidth = cellSize;
+            int boxHeight = cellSize;
+            
+            // Check each door for proximity
+            for (Door door : doors) {
+                if (!door.isOpen()) continue;
+                
+                // Calculate distance between box center and door center
+                float boxCenterX = boxX + carriedBox.getWidth() / 2;
+                float boxCenterY = boxY + carriedBox.getHeight() / 2;
+                float doorCenterX = door.getX() + door.getWidth() / 2;
+                float doorCenterY = door.getY() + door.getHeight() / 2;
+                
+                // Calculate distance in grid cells
+                float dx = Math.abs(boxCenterX - doorCenterX) / GRID_CELL_SIZE;
+                float dy = Math.abs(boxCenterY - doorCenterY) / GRID_CELL_SIZE;
+                
+                // If box is within 3 cells of the door
+                if (dx <= 3 && dy <= 3) {
+                    // Reduce box size to 70% when near a door
+                    boxWidth = (int)(cellSize * 0.7f);
+                    boxHeight = (int)(cellSize * 0.7f);
+                    break;
+                }
+            }
+            
+            // Update box size and position
+            carriedBox.setWidth(boxWidth);
+            carriedBox.setHeight(boxHeight);
+            carriedBox.updateCarriedPosition(boxX, boxY);
         }
     }
     
@@ -723,6 +1055,17 @@ public class PlayState extends GameState {
      */
     private void dropCarriedBox() {
         if (carriedBox != null) {
+            // Get the full size
+            int cellSize = level.getGrid().getCellSize();
+            
+            // Grow the box back to full size while still being carried
+            carriedBox.setWidth(cellSize);
+            carriedBox.setHeight(cellSize);
+            
+            // Update the box's position while still being carried
+            carriedBox.updateCarriedPosition(player.getX(), player.getY());
+            
+            // Now drop the box
             carriedBox.drop();
             
             // Record box interaction in rewind manager
