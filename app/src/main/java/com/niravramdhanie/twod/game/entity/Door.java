@@ -28,6 +28,12 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
     private Color permanentIndicatorColor = new Color(255, 215, 0, 160); // Semi-transparent gold
     private long openTime; // Time when the door was opened
     
+    // Multi-cell door support
+    private int gridWidth = 1;  // Width in grid cells (default: 1)
+    private int gridHeight = 1; // Height in grid cells (default: 1)
+    private int cellSize;       // Size of a single grid cell
+    private boolean obeyGridSystem = true; // Whether the door obeys the grid system
+    
     /**
      * Creates a new door entity.
      * 
@@ -43,6 +49,40 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
         this.isOpen = false;
         this.isPermanentlyOpen = false;
         this.openTime = 0;
+        this.cellSize = width; // Assuming square cells
+        
+        try {
+            // Load door images
+            doorImage = ResourceLoader.loadImage("/sprites/door_closed.png");
+            doorOpenImage = ResourceLoader.loadImage("/sprites/door_open.png");
+        } catch (Exception e) {
+            System.err.println("Error loading door images: " + e.getMessage());
+            doorImage = null;
+            doorOpenImage = null;
+        }
+    }
+    
+    /**
+     * Creates a new multi-cell door entity.
+     * 
+     * @param x The x position
+     * @param y The y position
+     * @param cellSize The size of a single grid cell
+     * @param gridWidth The width in grid cells
+     * @param gridHeight The height in grid cells
+     * @param id The unique ID of the door
+     * @param obeyGridSystem Whether the door obeys the grid system for collision
+     */
+    public Door(float x, float y, int cellSize, int gridWidth, int gridHeight, String id, boolean obeyGridSystem) {
+        super(x, y, cellSize * gridWidth, cellSize * gridHeight);
+        this.id = id;
+        this.isOpen = false;
+        this.isPermanentlyOpen = false;
+        this.openTime = 0;
+        this.cellSize = cellSize;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+        this.obeyGridSystem = obeyGridSystem;
         
         try {
             // Load door images
@@ -67,8 +107,8 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
     
     @Override
     public void render(Graphics2D g) {
-        if (doorImage != null && doorOpenImage != null) {
-            // Render using images
+        if (doorImage != null && doorOpenImage != null && gridWidth == 1 && gridHeight == 1) {
+            // Render using images - only for standard 1x1 doors
             if (isOpen) {
                 g.drawImage(doorOpenImage, (int)position.x, (int)position.y, width, height, null);
                 // Draw open indicator
@@ -81,7 +121,7 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
                 g.drawImage(doorImage, (int)position.x, (int)position.y, width, height, null);
             }
         } else {
-            // Fallback rendering with rectangles
+            // Fallback rendering with rectangles - always used for multi-cell doors
             if (isOpen) {
                 // Draw frame but no door
                 drawDoorFrame(g);
@@ -218,17 +258,19 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
         // Draw the door frame
         g.setColor(frameColor);
         
+        int frameThickness = Math.max(width, height) / 16; // Thinner frame for larger doors
+        
         // Left side
-        g.fillRect((int)position.x, (int)position.y, width / 8, height);
+        g.fillRect((int)position.x, (int)position.y, frameThickness, height);
         
         // Right side
-        g.fillRect((int)position.x + width - width / 8, (int)position.y, width / 8, height);
+        g.fillRect((int)position.x + width - frameThickness, (int)position.y, frameThickness, height);
         
         // Top
-        g.fillRect((int)position.x, (int)position.y, width, height / 8);
+        g.fillRect((int)position.x, (int)position.y, width, frameThickness);
         
         // Bottom
-        g.fillRect((int)position.x, (int)position.y + height - height / 8, width, height / 8);
+        g.fillRect((int)position.x, (int)position.y + height - frameThickness, width, frameThickness);
     }
     
     /**
@@ -237,11 +279,18 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
      * @param g The graphics context
      */
     private void drawDoorBody(Graphics2D g) {
+        // Save original color and paint
+        Color originalColor = g.getColor();
+        java.awt.Paint originalPaint = g.getPaint();
+        
+        Color doorColor = new Color(139, 69, 19); // Brown door color
+        
         // Door body fill
-        int doorBodyX = (int)position.x + width / 8;
-        int doorBodyY = (int)position.y + height / 8;
-        int doorBodyWidth = width - width / 4;
-        int doorBodyHeight = height - height / 4;
+        int frameThickness = Math.max(width, height) / 16;
+        int doorBodyX = (int)position.x + frameThickness;
+        int doorBodyY = (int)position.y + frameThickness;
+        int doorBodyWidth = width - (frameThickness * 2);
+        int doorBodyHeight = height - (frameThickness * 2);
         
         // Create a gradient for 3D effect
         GradientPaint gradient = new GradientPaint(
@@ -249,22 +298,65 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
             doorBodyX + doorBodyWidth, doorBodyY, doorColor.darker()
         );
         
-        // Save original paint
-        java.awt.Paint originalPaint = g.getPaint();
-        
         // Apply gradient and draw door
         g.setPaint(gradient);
         g.fillRect(doorBodyX, doorBodyY, doorBodyWidth, doorBodyHeight);
         
-        // Add a door handle
-        g.setColor(Color.BLACK);
-        g.fillOval(doorBodyX + doorBodyWidth - doorBodyWidth / 6, 
-                  doorBodyY + doorBodyHeight / 2, 
-                  doorBodyWidth / 10, 
-                  doorBodyWidth / 10);
+        // Add door details based on size
+        if (gridWidth > 1 || gridHeight > 1) {
+            // Add grid lines to make it look like multiple door panels
+            g.setColor(new Color(101, 67, 33));
+            
+            // Vertical grid lines
+            for (int i = 1; i < gridWidth; i++) {
+                int x = doorBodyX + (i * (doorBodyWidth / gridWidth));
+                g.fillRect(x - frameThickness/2, doorBodyY, frameThickness, doorBodyHeight);
+            }
+            
+            // Horizontal grid lines
+            for (int i = 1; i < gridHeight; i++) {
+                int y = doorBodyY + (i * (doorBodyHeight / gridHeight));
+                g.fillRect(doorBodyX, y - frameThickness/2, doorBodyWidth, frameThickness);
+            }
+        }
         
-        // Restore original paint
+        // Add door handles
+        g.setColor(Color.BLACK);
+        
+        // For horizontal doors (width > height), add handles in the middle of each cell
+        if (gridWidth > gridHeight) {
+            int handleY = doorBodyY + doorBodyHeight / 2;
+            int handleSize = cellSize / 10;
+            
+            for (int i = 0; i < gridWidth; i++) {
+                int handleX = doorBodyX + (i * (doorBodyWidth / gridWidth)) + (doorBodyWidth / gridWidth) - (doorBodyWidth / gridWidth) / 3;
+                g.fillOval(handleX, handleY, handleSize, handleSize);
+            }
+        } 
+        // For vertical doors (height > width), add handles in the middle of each cell
+        else if (gridHeight > gridWidth) {
+            int handleX = doorBodyX + doorBodyWidth - (doorBodyWidth / 3);
+            int handleSize = cellSize / 10;
+            
+            for (int i = 0; i < gridHeight; i++) {
+                int handleY = doorBodyY + (i * (doorBodyHeight / gridHeight)) + (doorBodyHeight / gridHeight) / 2;
+                g.fillOval(handleX, handleY, handleSize, handleSize);
+            }
+        }
+        // For square doors, add a handle in the middle right
+        else {
+            int handleSize = Math.max(doorBodyWidth, doorBodyHeight) / 10;
+            g.fillOval(
+                doorBodyX + doorBodyWidth - (doorBodyWidth / 3),
+                doorBodyY + doorBodyHeight / 2, 
+                handleSize,
+                handleSize
+            );
+        }
+        
+        // Restore original paint and color
         g.setPaint(originalPaint);
+        g.setColor(originalColor);
     }
     
     /**

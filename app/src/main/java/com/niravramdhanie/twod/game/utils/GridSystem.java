@@ -118,6 +118,31 @@ public class GridSystem {
     }
     
     /**
+     * Registers an entity in a grid cell without changing its position.
+     * This is useful for multi-cell entities that occupy more than one grid cell.
+     * 
+     * @param entity The entity to register
+     * @param gridX The X position on the grid
+     * @param gridY The Y position on the grid
+     * @return True if the entity was registered successfully, false if the cell was already occupied
+     */
+    public boolean registerEntityInCell(Entity entity, int gridX, int gridY) {
+        String key = gridX + "," + gridY;
+        
+        // Check if the cell is already occupied
+        if (gridEntities.containsKey(key)) {
+            System.out.println("Cell " + gridX + "," + gridY + " is already occupied");
+            return false;
+        }
+        
+        // Store the entity in the grid without changing its position
+        gridEntities.put(key, entity);
+        
+        System.out.println("Registered entity in grid cell " + gridX + "," + gridY);
+        return true;
+    }
+    
+    /**
      * Removes an entity from the specified grid position.
      * 
      * @param gridX The X position on the grid

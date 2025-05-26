@@ -77,6 +77,50 @@ public class Level {
     }
     
     /**
+     * Adds an entity that spans multiple grid cells.
+     * 
+     * @param entity The entity to add
+     * @param gridX The starting X position on the grid
+     * @param gridY The starting Y position on the grid
+     * @param gridWidth The width in grid cells
+     * @param gridHeight The height in grid cells
+     * @return True if the entity was added successfully, false if any position was already occupied
+     */
+    public boolean addMultiCellEntity(Entity entity, int gridX, int gridY, int gridWidth, int gridHeight) {
+        int cellSize = grid.getCellSize();
+        entity.setWidth(cellSize * gridWidth);
+        entity.setHeight(cellSize * gridHeight);
+        
+        // Check if any of the cells are occupied
+        for (int x = gridX; x < gridX + gridWidth; x++) {
+            for (int y = gridY; y < gridY + gridHeight; y++) {
+                if (grid.isOccupied(x, y)) {
+                    System.out.println("Cannot place multi-cell entity - cell " + x + "," + y + " is occupied");
+                    return false;
+                }
+            }
+        }
+        
+        // Place the entity in the starting cell
+        float entityX = grid.gridToScreenX(gridX);
+        float entityY = grid.gridToScreenY(gridY);
+        entity.setX(entityX);
+        entity.setY(entityY);
+        
+        // Add the entity to our list just once
+        entities.add(entity);
+        
+        // Register the entity in all cells it occupies
+        for (int x = gridX; x < gridX + gridWidth; x++) {
+            for (int y = gridY; y < gridY + gridHeight; y++) {
+                grid.registerEntityInCell(entity, x, y);
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
      * Removes an entity at the specified grid position.
      * 
      * @param gridX The X position on the grid

@@ -21,6 +21,7 @@ import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Door;
 import com.niravramdhanie.twod.game.entity.Entity;
+// ResizableDoor is no longer used
 import com.niravramdhanie.twod.game.entity.WeightedButton;
 import com.niravramdhanie.twod.game.level.Level;
 import com.niravramdhanie.twod.game.utils.RewindManager;
@@ -460,10 +461,10 @@ public class PlayState extends GameState {
             level.addEntity(block, x, roomStartY + 5);
         }
         
-        // Left wall (with door opening)
+        // Left wall (with vertical door opening that's 3 cells tall)
         for (int y = roomStartY; y < roomStartY + 6; y++) {
-            // Skip the middle block for the door
-            if (y == roomStartY + 3) continue;
+            // Skip three blocks for the 3x1 door
+            if (y >= roomStartY + 2 && y <= roomStartY + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(roomStartX);
             float blockY = level.getGrid().gridToScreenY(y);
@@ -479,13 +480,17 @@ public class PlayState extends GameState {
             level.addEntity(block, roomStartX + 5, y);
         }
         
-        // Add a door to the room (on the left wall)
+        // Add a 3x1 vertical door to the room (on the left wall)
         int roomDoorGridX = roomStartX;
-        int roomDoorGridY = roomStartY + 3; // Middle of left wall
+        int roomDoorGridY = roomStartY + 2; // Start from the top cell of the 3-cell gap
         float roomDoorX = level.getGrid().gridToScreenX(roomDoorGridX);
         float roomDoorY = level.getGrid().gridToScreenY(roomDoorGridY);
-        Door roomDoor = new Door(roomDoorX, roomDoorY, cellSize, cellSize, "room_door");
-        level.addEntity(roomDoor, roomDoorGridX, roomDoorGridY);
+        
+        // Create a 3x1 door (vertical) that does not obey the grid system for collision (false parameter)
+        Door roomDoor = new Door(roomDoorX, roomDoorY, cellSize, 1, 3, "room_door", false);
+        
+        // Use the multi-cell entity method to properly register the door in all cells it occupies
+        level.addMultiCellEntity(roomDoor, roomDoorGridX, roomDoorGridY, 1, 3);
         doorController.registerDoor(roomDoor);
         
         // Create two connected rooms at the bottom left (shifted left by one tile)
@@ -494,10 +499,10 @@ public class PlayState extends GameState {
         int leftRoomStartY = verticalCells - 8; // 6 cells from bottom edge
         
         // Create left room walls
-        // Top wall (with door)
+        // Top wall (with wide door that's 3 cells wide)
         for (int x = leftRoomStartX; x < leftRoomStartX + 6; x++) {
-            // Skip the middle block for the door
-            if (x == leftRoomStartX + 3) continue;
+            // Skip three blocks for the resizable door (1x3 size)
+            if (x >= leftRoomStartX + 2 && x <= leftRoomStartX + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(leftRoomStartY);
@@ -529,13 +534,18 @@ public class PlayState extends GameState {
             level.addEntity(block, leftRoomStartX + 6, y);
         }
         
-        // Add door to left room (on top wall)
-        int leftRoomDoorGridX = leftRoomStartX + 3;
+        // Add a 1x3 door to left room (on top wall)
+        int leftRoomDoorGridX = leftRoomStartX + 2; // Start from the leftmost cell of the 3-cell gap
         int leftRoomDoorGridY = leftRoomStartY;
         float leftRoomDoorX = level.getGrid().gridToScreenX(leftRoomDoorGridX);
         float leftRoomDoorY = level.getGrid().gridToScreenY(leftRoomDoorGridY);
-        Door leftRoomDoor = new Door(leftRoomDoorX, leftRoomDoorY, cellSize, cellSize, "left_room_door");
-        level.addEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY);
+        
+        // Create a 1x3 door that does not obey the grid system for collision (false parameter)
+        Door leftRoomDoor = new Door(leftRoomDoorX, leftRoomDoorY, cellSize, 3, 1, "left_room_door", false);
+        
+        // Use the multi-cell entity method to properly register the door in all cells it occupies
+        level.addMultiCellEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY, 3, 1);
+        
         doorController.registerDoor(leftRoomDoor);
         
         // Second room (right room)
@@ -543,10 +553,10 @@ public class PlayState extends GameState {
         int rightRoomStartY = leftRoomStartY; // Same Y as left room
         
         // Create right room walls
-        // Top wall (with door)
+        // Top wall (with wide door that's 3 cells wide)
         for (int x = rightRoomStartX; x < rightRoomStartX + 6; x++) {
-            // Skip the middle block for the door
-            if (x == rightRoomStartX + 3) continue;
+            // Skip three blocks for the 1x3 door
+            if (x >= rightRoomStartX + 2 && x <= rightRoomStartX + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(rightRoomStartY);
@@ -570,13 +580,17 @@ public class PlayState extends GameState {
             level.addEntity(block, rightRoomStartX + 6, y);
         }
         
-        // Add door to right room (on top wall)
-        int rightRoomDoorGridX = rightRoomStartX + 3;
+        // Add a 1x3 door to right room (on top wall)
+        int rightRoomDoorGridX = rightRoomStartX + 2; // Start from the leftmost cell of the 3-cell gap
         int rightRoomDoorGridY = rightRoomStartY;
         float rightRoomDoorX = level.getGrid().gridToScreenX(rightRoomDoorGridX);
         float rightRoomDoorY = level.getGrid().gridToScreenY(rightRoomDoorGridY);
-        Door rightRoomDoor = new Door(rightRoomDoorX, rightRoomDoorY, cellSize, cellSize, "right_room_door");
-        level.addEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY);
+        
+        // Create a 1x3 door that does not obey the grid system for collision (false parameter)
+        Door rightRoomDoor = new Door(rightRoomDoorX, rightRoomDoorY, cellSize, 3, 1, "right_room_door", false);
+        
+        // Use the multi-cell entity method to properly register the door in all cells it occupies
+        level.addMultiCellEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY, 3, 1);
         doorController.registerDoor(rightRoomDoor);
         
         // Add three weighted buttons
@@ -916,33 +930,12 @@ public class PlayState extends GameState {
                     doors.add((Door) entity);
                 }
             }
-            
             // Default to full size
             int boxWidth = cellSize;
             int boxHeight = cellSize;
             
-            // Check each door for proximity
-            for (Door door : doors) {
-                if (!door.isOpen()) continue;
-                
-                // Calculate distance between box center and door center
-                float boxCenterX = boxX + carriedBox.getWidth() / 2;
-                float boxCenterY = boxY + carriedBox.getHeight() / 2;
-                float doorCenterX = door.getX() + door.getWidth() / 2;
-                float doorCenterY = door.getY() + door.getHeight() / 2;
-                
-                // Calculate distance in grid cells
-                float dx = Math.abs(boxCenterX - doorCenterX) / GRID_CELL_SIZE;
-                float dy = Math.abs(boxCenterY - doorCenterY) / GRID_CELL_SIZE;
-                
-                // If box is within 3 cells of the door
-                if (dx <= 3 && dy <= 3) {
-                    // Reduce box size to 70% when near a door
-                    boxWidth = (int)(cellSize * 0.7f);
-                    boxHeight = (int)(cellSize * 0.7f);
-                    break;
-                }
-            }
+            // No longer shrink boxes near open doors
+            // Boxes will remain at full size regardless of proximity to doors
             
             // Update box size and position
             carriedBox.setWidth(boxWidth);
