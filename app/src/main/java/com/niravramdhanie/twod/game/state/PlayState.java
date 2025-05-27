@@ -40,7 +40,7 @@ public class PlayState extends GameState {
     
     // Timer variables
     private long startTime;
-    private int timerDuration = 45; // Duration in seconds
+    private int timerDuration = 60; // Duration in seconds
     private Font timerFont;
     
     // Timer manager
@@ -652,8 +652,8 @@ public class PlayState extends GameState {
         
         // Create the weighted button that records time when activated
         button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, button1Action);
-        button1.setColor(new Color(200, 50, 50)); // Red when inactive
-        button1.setActiveColor(new Color(255, 100, 100)); // Lighter red when active
+        button1.setColor(new Color(220, 20, 20)); // Bright red when inactive
+        button1.setActiveColor(new Color(255, 60, 60)); // Vibrant red when active
         level.addEntity(button1, button1GridX, button1GridY);
         weightedButtons.add(button1);
         
@@ -707,6 +707,9 @@ public class PlayState extends GameState {
         float button4Y = level.getGrid().gridToScreenY(button4GridY);
         // Button4 doesn't need a specific action as we'll check its state directly
         button4 = new WeightedButton(button4X, button4Y, cellSize, cellSize, null);
+        // Set same red color scheme as button1 to show they're connected
+        button4.setColor(new Color(220, 20, 20)); // Bright red when inactive
+        button4.setActiveColor(new Color(255, 60, 60)); // Vibrant red when active
         level.addEntity(button4, button4GridX, button4GridY);
         weightedButtons.add(button4);
         
