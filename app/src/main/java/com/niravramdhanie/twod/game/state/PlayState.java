@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Random;
 
 import com.niravramdhanie.twod.game.actions.Action;
-import com.niravramdhanie.twod.game.actions.ButtonUpdateAction;
 import com.niravramdhanie.twod.game.actions.DoorAction;
 import com.niravramdhanie.twod.game.actions.DoorController;
 import com.niravramdhanie.twod.game.actions.MultiButtonAction;
@@ -22,7 +21,6 @@ import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Door;
 import com.niravramdhanie.twod.game.entity.Entity;
-// ResizableDoor is no longer used
 import com.niravramdhanie.twod.game.entity.WeightedButton;
 import com.niravramdhanie.twod.game.level.Level;
 import com.niravramdhanie.twod.game.utils.RewindManager;
@@ -462,10 +460,10 @@ public class PlayState extends GameState {
             level.addEntity(block, x, roomStartY + 5);
         }
         
-        // Left wall (with vertical door opening that's 3 cells tall)
+        // Left wall (with door opening)
         for (int y = roomStartY; y < roomStartY + 6; y++) {
-            // Skip three blocks for the 3x1 door
-            if (y >= roomStartY + 2 && y <= roomStartY + 4) continue;
+            // Skip the middle block for the door
+            if (y == roomStartY + 3) continue;
             
             float blockX = level.getGrid().gridToScreenX(roomStartX);
             float blockY = level.getGrid().gridToScreenY(y);
@@ -481,17 +479,13 @@ public class PlayState extends GameState {
             level.addEntity(block, roomStartX + 5, y);
         }
         
-        // Add a 3x1 vertical door to the room (on the left wall)
+        // Add a door to the room (on the left wall)
         int roomDoorGridX = roomStartX;
-        int roomDoorGridY = roomStartY + 2; // Start from the top cell of the 3-cell gap
+        int roomDoorGridY = roomStartY + 3; // Middle of left wall
         float roomDoorX = level.getGrid().gridToScreenX(roomDoorGridX);
         float roomDoorY = level.getGrid().gridToScreenY(roomDoorGridY);
-        
-        // Create a 3x1 door (vertical) that does not obey the grid system for collision (false parameter)
-        Door roomDoor = new Door(roomDoorX, roomDoorY, cellSize, 1, 3, "room_door", false);
-        
-        // Use the multi-cell entity method to properly register the door in all cells it occupies
-        level.addMultiCellEntity(roomDoor, roomDoorGridX, roomDoorGridY, 1, 3);
+        Door roomDoor = new Door(roomDoorX, roomDoorY, cellSize, cellSize, "room_door");
+        level.addEntity(roomDoor, roomDoorGridX, roomDoorGridY);
         doorController.registerDoor(roomDoor);
         
         // Create two connected rooms at the bottom left (shifted left by one tile)
@@ -500,10 +494,10 @@ public class PlayState extends GameState {
         int leftRoomStartY = verticalCells - 8; // 6 cells from bottom edge
         
         // Create left room walls
-        // Top wall (with wide door that's 3 cells wide)
+        // Top wall (with door)
         for (int x = leftRoomStartX; x < leftRoomStartX + 6; x++) {
-            // Skip three blocks for the resizable door (1x3 size)
-            if (x >= leftRoomStartX + 2 && x <= leftRoomStartX + 4) continue;
+            // Skip the middle block for the door
+            if (x == leftRoomStartX + 3) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(leftRoomStartY);
@@ -535,18 +529,13 @@ public class PlayState extends GameState {
             level.addEntity(block, leftRoomStartX + 6, y);
         }
         
-        // Add a 1x3 door to left room (on top wall)
-        int leftRoomDoorGridX = leftRoomStartX + 2; // Start from the leftmost cell of the 3-cell gap
+        // Add door to left room (on top wall)
+        int leftRoomDoorGridX = leftRoomStartX + 3;
         int leftRoomDoorGridY = leftRoomStartY;
         float leftRoomDoorX = level.getGrid().gridToScreenX(leftRoomDoorGridX);
         float leftRoomDoorY = level.getGrid().gridToScreenY(leftRoomDoorGridY);
-        
-        // Create a 1x3 door that does not obey the grid system for collision (false parameter)
-        Door leftRoomDoor = new Door(leftRoomDoorX, leftRoomDoorY, cellSize, 3, 1, "left_room_door", false);
-        
-        // Use the multi-cell entity method to properly register the door in all cells it occupies
-        level.addMultiCellEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY, 3, 1);
-        
+        Door leftRoomDoor = new Door(leftRoomDoorX, leftRoomDoorY, cellSize, cellSize, "left_room_door");
+        level.addEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY);
         doorController.registerDoor(leftRoomDoor);
         
         // Second room (right room)
@@ -554,10 +543,10 @@ public class PlayState extends GameState {
         int rightRoomStartY = leftRoomStartY; // Same Y as left room
         
         // Create right room walls
-        // Top wall (with wide door that's 3 cells wide)
+        // Top wall (with door)
         for (int x = rightRoomStartX; x < rightRoomStartX + 6; x++) {
-            // Skip three blocks for the 1x3 door
-            if (x >= rightRoomStartX + 2 && x <= rightRoomStartX + 4) continue;
+            // Skip the middle block for the door
+            if (x == rightRoomStartX + 3) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(rightRoomStartY);
@@ -581,17 +570,13 @@ public class PlayState extends GameState {
             level.addEntity(block, rightRoomStartX + 6, y);
         }
         
-        // Add a 1x3 door to right room (on top wall)
-        int rightRoomDoorGridX = rightRoomStartX + 2; // Start from the leftmost cell of the 3-cell gap
+        // Add door to right room (on top wall)
+        int rightRoomDoorGridX = rightRoomStartX + 3;
         int rightRoomDoorGridY = rightRoomStartY;
         float rightRoomDoorX = level.getGrid().gridToScreenX(rightRoomDoorGridX);
         float rightRoomDoorY = level.getGrid().gridToScreenY(rightRoomDoorGridY);
-        
-        // Create a 1x3 door that does not obey the grid system for collision (false parameter)
-        Door rightRoomDoor = new Door(rightRoomDoorX, rightRoomDoorY, cellSize, 3, 1, "right_room_door", false);
-        
-        // Use the multi-cell entity method to properly register the door in all cells it occupies
-        level.addMultiCellEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY, 3, 1);
+        Door rightRoomDoor = new Door(rightRoomDoorX, rightRoomDoorY, cellSize, cellSize, "right_room_door");
+        level.addEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY);
         doorController.registerDoor(rightRoomDoor);
         
         // Add three weighted buttons
@@ -644,8 +629,7 @@ public class PlayState extends GameState {
         float centerBoxX = level.getGrid().gridToScreenX(centerBoxGridX);
         float centerBoxY = level.getGrid().gridToScreenY(centerBoxGridY);
         Box centerBox = new Box(centerBoxX, centerBoxY, cellSize, cellSize, true, true);
-        centerBox.setFullRewindTracking(true); // Enable full path tracking during rewind
-        // Note: isRewinding is false by default, allowing pickup even during rewind
+        centerBox.setFullRewindTracking(true);
         level.addEntity(centerBox, centerBoxGridX, centerBoxGridY);
         
         // Second box in the middle of the right bottom room
@@ -654,8 +638,7 @@ public class PlayState extends GameState {
         float rightRoomBoxX = level.getGrid().gridToScreenX(rightRoomBoxGridX);
         float rightRoomBoxY = level.getGrid().gridToScreenY(rightRoomBoxGridY);
         Box rightRoomBox = new Box(rightRoomBoxX, rightRoomBoxY, cellSize, cellSize, true, true);
-        rightRoomBox.setFullRewindTracking(true); // Enable full path tracking during rewind
-        // Note: isRewinding is false by default, allowing pickup even during rewind
+        rightRoomBox.setFullRewindTracking(true);
         level.addEntity(rightRoomBox, rightRoomBoxGridX, rightRoomBoxGridY);
         
         // Add fourth button inside top right room (controls left bottom room door)
@@ -696,19 +679,11 @@ public class PlayState extends GameState {
         // Create a multi-button action for the end door
         DoorAction endDoorAction = new DoorAction("end_door");
         endDoorAction.setDoorStateChangeListener(doorController);
-        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, true); // true = permanent activation - door stays open once activated
+        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, false); // false = not permanent
         
-        // Add both blue buttons as required buttons to the MultiButtonAction
-        endDoorMultiAction.addRequiredButton("blue_button1");
-        endDoorMultiAction.addRequiredButton("blue_button2");
-        
-        // Create button actions that will update the MultiButtonAction
-        ButtonUpdateAction blueButton1UpdateAction = new ButtonUpdateAction("blue_button1", endDoorMultiAction);
-        ButtonUpdateAction blueButton2UpdateAction = new ButtonUpdateAction("blue_button2", endDoorMultiAction);
-        
-        // Create timed actions that wrap the button update actions
-        TimedAction blueButton1Action = new TimedAction(blueButton1UpdateAction, 1000); // 1 second
-        TimedAction blueButton2Action = new TimedAction(blueButton2UpdateAction, 1000); // 1 second
+        // Create timed actions for both blue buttons
+        TimedAction blueButton1Action = createTimedButtonAction("blue_button1", 1000); // 1 second
+        TimedAction blueButton2Action = createTimedButtonAction("blue_button2", 1000); // 1 second
         
         // Set the actions for the blue buttons
         blueButton1.setAction(blueButton1Action);
@@ -818,6 +793,9 @@ public class PlayState extends GameState {
         System.out.println("Reset player position to: " + playerX + "," + playerY);
     }
     
+    // Flag to track if timer was just reset (to prevent immediate game over)
+    private boolean timerJustReset = false;
+    
     @Override
     public void update() {
         if (!initialized) return;
@@ -826,30 +804,27 @@ public class PlayState extends GameState {
             // Update timer
             timerManager.update();
             
-            // Check for game over condition
-            if (!gameOver && timerManager.getTime() <= 0) {
+            // If timer was just reset, clear the flag and don't check game over this frame
+            if (timerJustReset) {
+                timerJustReset = false;
+                System.out.println("Timer was just reset, skipping game over check this frame");
+            }
+            // Otherwise check for game over condition
+            else if (!gameOver && timerManager.getTime() <= 0) {
                 gameOver = true;
                 player.triggerExplosion();
-            }
-            
-            // If game over and explosion finished, return to home screen
-            if (gameOver && player.isExplosionFinished()) {
-                // Reactivate player movement
+                
+                // Stop player movement when game is over
                 player.setLeft(false);
                 player.setRight(false);
                 player.setUp(false);
                 player.setDown(false);
-                
-                // Reset game over state
-                gameOver = false;
-                
-                // Return to menu state
-                gsm.setState(GameStateManager.MENU_STATE);
-                return;
             }
             
             // Don't update game state if game over
             if (gameOver) {
+                // No longer automatically transition to menu
+                // The player can press 'T' to restart the level
                 return;
             }
             
@@ -1158,6 +1133,9 @@ public class PlayState extends GameState {
             // Draw rewind status indicator
             drawRewindStatusIndicator(g);
             
+            // Draw the game over screen if game is over
+            renderGameOver(g);
+            
         } catch (Exception e) {
             System.err.println("Error in PlayState.render(): " + e.getMessage());
             e.printStackTrace();
@@ -1179,6 +1157,49 @@ public class PlayState extends GameState {
     }
     
     /**
+     * Renders the "You Died" message when game is over
+     */
+    private void renderGameOver(Graphics2D g) {
+        if (!gameOver) return;
+        
+        // Save original settings
+        Color originalColor = g.getColor();
+        Font originalFont = g.getFont();
+        
+        // Create semi-transparent overlay
+        g.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
+        g.fillRect(0, 0, screenWidth, screenHeight);
+        
+        // Draw "You Died" text
+        g.setColor(Color.RED);
+        g.setFont(new Font("Arial", Font.BOLD, 72));
+        String gameOverText = "You Died";
+        
+        // Center the text
+        int textWidth = g.getFontMetrics().stringWidth(gameOverText);
+        int x = (screenWidth - textWidth) / 2;
+        int y = screenHeight / 2;
+        
+        g.drawString(gameOverText, x, y);
+        
+        // Draw restart instruction
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        String restartText = "Press 'T' to restart";
+        
+        // Center the instruction text
+        textWidth = g.getFontMetrics().stringWidth(restartText);
+        x = (screenWidth - textWidth) / 2;
+        y += 50; // Below the "You Died" text
+        
+        g.drawString(restartText, x, y);
+        
+        // Restore original settings
+        g.setColor(originalColor);
+        g.setFont(originalFont);
+    }
+    
+    /**
      * Draws an indicator showing the current rewind state
      */
     private void drawRewindStatusIndicator(Graphics2D g) {
@@ -1192,27 +1213,23 @@ public class PlayState extends GameState {
         g.setFont(new Font("Arial", Font.BOLD, 16));
         int y = screenHeight - 40;
         
+        // Create triangle points for the recording indicator
+        int[] xPoints = {10, 25, 10};
+        int[] yPoints = {y, y + 7, y + 15};
+        
         // Draw different indicators based on rewind state
         switch (rewindManager.getCurrentState()) {
             case RECORDING:
                 // Red recording indicator
                 g.setColor(Color.RED);
-                g.fillOval(10, y, 15, 15);
+                g.fillPolygon(xPoints, yPoints, 3);
                 g.drawString("Recording", 30, y + 12);
                 break;
                 
             case REWINDING:
-                // Flashing blue rewind indicator
-                if ((System.currentTimeMillis() / 250) % 2 == 0) {
-                    g.setColor(Color.BLUE);
-                } else {
-                    g.setColor(Color.CYAN);
-                }
-                
-                int[] xPoints = {20, 5, 5};
-                int[] yPoints = {y + 7, y, y + 15};
+                // Blue rewinding indicator
+                g.setColor(Color.BLUE);
                 g.fillPolygon(xPoints, yPoints, 3);
-                
                 g.drawString("Rewinding", 30, y + 12);
                 break;
                 
@@ -1457,8 +1474,36 @@ public class PlayState extends GameState {
     
     @Override
     public void keyPressed(int k) {
-        // Don't process input if game over
-        if (gameOver) return;
+        // Special case for game over: only allow the restart key (T)
+        if (gameOver) {
+            if (k == KeyEvent.VK_T) {
+                // First explicitly reset the timer to make sure it's not at zero
+                if (timerManager != null) {
+                    timerManager.reset();
+                    timerManager.start();
+                    // Set the flag to prevent immediate game over
+                    timerJustReset = true;
+                    System.out.println("Timer reset to: " + timerManager.getTime() + " seconds");
+                }
+                
+                // Reset game over state
+                gameOver = false;
+                System.out.println("Game over state reset to: " + gameOver);
+                
+                // Reset the current level (this will reinitialize the player)
+                setLevelLayout(currentLevel);
+                
+                // Make sure the player is no longer exploding after level reset
+                if (player != null) {
+                    player.resetAfterExplosion();
+                    System.out.println("Player explosion state reset");
+                }
+                
+                System.out.println("Level restarted after game over");
+            }
+            // Ignore all other input during game over
+            return;
+        }
         
         // Handle player movement
         if (player != null) {

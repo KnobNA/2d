@@ -6,7 +6,6 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import com.niravramdhanie.twod.game.graphics.Animation;
-import com.niravramdhanie.twod.game.graphics.SpriteSheet;
 import com.niravramdhanie.twod.game.utils.ResourceLoader;
 
 public class BallPlayer extends Entity {
@@ -199,6 +198,27 @@ public class BallPlayer extends Entity {
      */
     public boolean isExplosionFinished() {
         return isExploding && (System.currentTimeMillis() - explosionStartTime >= EXPLOSION_DURATION);
+    }
+    
+    /**
+     * Resets the player after explosion, returning to normal state
+     */
+    public void resetAfterExplosion() {
+        // Reset explosion state
+        isExploding = false;
+        
+        // Reset to idle animation
+        currentAnim = idleAnim;
+        
+        // Clear movement flags to ensure player doesn't move until new input
+        left = false;
+        right = false;
+        up = false;
+        down = false;
+        
+        // Reset velocity
+        velocity.x = 0;
+        velocity.y = 0;
     }
     
     @Override
