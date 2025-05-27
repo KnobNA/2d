@@ -81,6 +81,13 @@ public class PlayState extends GameState {
     // Add this field at the class level
     private List<WeightedButton> weightedButtons = new ArrayList<>();
     
+    // Flag to track if the end door has been permanently opened
+    private boolean endDoorPermanentlyOpened = false;
+    
+    // Store references to blue buttons
+    private WeightedButton blueButton1;
+    private WeightedButton blueButton2;
+    
     // Level 3 buttons that control doors
     private WeightedButton button1;
     private WeightedButton button2;
@@ -704,27 +711,28 @@ public class PlayState extends GameState {
         int blueButton1GridY = roomStartY + 1; // 1 cell from top wall of top right room
         float blueButton1X = level.getGrid().gridToScreenX(blueButton1GridX);
         float blueButton1Y = level.getGrid().gridToScreenY(blueButton1GridY);
-        WeightedButton blueButton1 = new WeightedButton(blueButton1X, blueButton1Y, cellSize, cellSize, null);
-        blueButton1.setColor(new Color(80, 80, 200)); // Blue when inactive
-        blueButton1.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
-        level.addEntity(blueButton1, blueButton1GridX, blueButton1GridY);
-        weightedButtons.add(blueButton1);
+        this.blueButton1 = new WeightedButton(blueButton1X, blueButton1Y, cellSize, cellSize, null);
+        this.blueButton1.setColor(new Color(80, 80, 200)); // Blue when inactive
+        this.blueButton1.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
+        level.addEntity(this.blueButton1, blueButton1GridX, blueButton1GridY);
+        weightedButtons.add(this.blueButton1);
         
         // Second blue button (middle of left bottom room)
         int blueButton2GridX = leftRoomStartX + 3; // Middle of left bottom room horizontally
         int blueButton2GridY = leftRoomStartY + 3; // Middle of left bottom room vertically
         float blueButton2X = level.getGrid().gridToScreenX(blueButton2GridX);
         float blueButton2Y = level.getGrid().gridToScreenY(blueButton2GridY);
-        WeightedButton blueButton2 = new WeightedButton(blueButton2X, blueButton2Y, cellSize, cellSize, null);
-        blueButton2.setColor(new Color(80, 80, 200)); // Blue when inactive
-        blueButton2.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
-        level.addEntity(blueButton2, blueButton2GridX, blueButton2GridY);
-        weightedButtons.add(blueButton2);
+        this.blueButton2 = new WeightedButton(blueButton2X, blueButton2Y, cellSize, cellSize, null);
+        this.blueButton2.setColor(new Color(80, 80, 200)); // Blue when inactive
+        this.blueButton2.setActiveColor(new Color(100, 100, 255)); // Brighter blue when active
+        level.addEntity(this.blueButton2, blueButton2GridX, blueButton2GridY);
+        weightedButtons.add(this.blueButton2);
         
         // Create a multi-button action for the end door
         DoorAction endDoorAction = new DoorAction("end_door");
         endDoorAction.setDoorStateChangeListener(doorController);
-        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, false); // false = not permanent
+        // We won't use MultiButtonAction as we'll handle this ourselves through direct button checking
+        // This ensures we have full control over the blue button behavior
         
         // Create timed actions for both blue buttons
         TimedAction blueButton1Action = createTimedButtonAction("blue_button1", 1000); // 1 second
@@ -756,6 +764,9 @@ public class PlayState extends GameState {
         
         // Update the rewind manager with the boxes
         updateRewindManager();
+        
+        // Make sure end door is closed by default
+        doorController.closeDoor("end_door");
         
         System.out.println("Level 3 setup complete with three rooms, end door, and two movable boxes");
     }
@@ -855,6 +866,9 @@ public class PlayState extends GameState {
         // Don't update if buttons aren't initialized yet
         if (button1 == null || button2 == null || button3 == null || button4 == null) return;
         
+        // Check if both blue buttons are pressed simultaneously
+        checkBlueButtonsForEndDoor();
+        
         // Update the left room triple door state based on button1 and button4
         boolean leftRoomDoorsOpen = button1.isActivated() || button4.isActivated();
         
@@ -888,6 +902,30 @@ public class PlayState extends GameState {
             doorController.closeDoor("room_door");
             doorController.closeDoor("room_door_upper");
             doorController.closeDoor("room_door_lower");
+        }
+    }
+    
+    /**
+     * Checks if both blue buttons are pressed and opens the end door permanently if they are
+     */
+    private void checkBlueButtonsForEndDoor() {
+        // If the end door is already permanently opened, keep it open
+        if (endDoorPermanentlyOpened) {
+            doorController.openDoor("end_door");
+            return;
+        }
+        
+        // If both blue buttons exist and are activated, open the end door permanently
+        if (blueButton1 != null && blueButton2 != null && 
+            blueButton1.isActivated() && blueButton2.isActivated()) {
+            doorController.openDoor("end_door");
+            endDoorPermanentlyOpened = true; // Once opened, keep it open permanently
+            System.out.println("End door opened permanently by both blue buttons");
+        } else {
+            // If the end door is not permanently opened and not all buttons are pressed, keep it closed
+            if (!endDoorPermanentlyOpened) {
+                doorController.closeDoor("end_door");
+            }
         }
     }
     
