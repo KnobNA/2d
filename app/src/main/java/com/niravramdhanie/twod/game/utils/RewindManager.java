@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,10 +12,10 @@ import com.niravramdhanie.twod.game.actions.DoorAction;
 import com.niravramdhanie.twod.game.actions.TimedAction;
 import com.niravramdhanie.twod.game.actions.ToggleAction;
 import com.niravramdhanie.twod.game.entity.BallPlayer;
+import com.niravramdhanie.twod.game.entity.Block;
 import com.niravramdhanie.twod.game.entity.Box;
 import com.niravramdhanie.twod.game.entity.Button;
 import com.niravramdhanie.twod.game.entity.Entity;
-import com.niravramdhanie.twod.game.entity.Block;
 
 /**
  * Manages the rewind feature for the game.
@@ -385,6 +384,19 @@ public class RewindManager {
         for (Box box : boxes) {
             if (!box.isActive() || !box.hasFullRewindTracking()) {
                 continue; // Skip inactive boxes
+            }
+            
+            // Set the box as rewinding if it's not already
+            if (!box.isRewinding()) {
+                box.setRewinding(true);
+            }
+            
+            // If the box was picked up during rewind, the isRewinding flag
+            // would have been set to false in the Box.pickUp method
+            if (!box.isRewinding()) {
+                // Box was picked up during rewind, don't update its position
+                System.out.println("Box was picked up during rewind, not updating position");
+                continue;
             }
             
             List<BoxPositionRecord> positionHistory = boxPositionHistory.get(box);

@@ -167,12 +167,14 @@ public class Box extends Block {
      * @return True if the box was picked up, false if it can't be picked up
      */
     public boolean pickUp(float playerX, float playerY, Entity carrier) {
-        // If being rewound and player tries to pick up, cancel rewind
+        // Allow pickup during rewind - this cancels the box's rewind path
+        // but doesn't prevent the pickup itself
         if (isRewinding && carrier != null) {
             isRewinding = false;
             System.out.println("Box rewind cancelled due to player pickup");
         }
         
+        // Don't allow pickup if box is not movable or already being carried
         if (!isMovable || isBeingCarried) {
             return false;
         }

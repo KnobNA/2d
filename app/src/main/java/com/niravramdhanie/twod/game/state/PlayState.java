@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.niravramdhanie.twod.game.actions.Action;
+import com.niravramdhanie.twod.game.actions.ButtonUpdateAction;
 import com.niravramdhanie.twod.game.actions.DoorAction;
 import com.niravramdhanie.twod.game.actions.DoorController;
 import com.niravramdhanie.twod.game.actions.MultiButtonAction;
@@ -643,7 +644,8 @@ public class PlayState extends GameState {
         float centerBoxX = level.getGrid().gridToScreenX(centerBoxGridX);
         float centerBoxY = level.getGrid().gridToScreenY(centerBoxGridY);
         Box centerBox = new Box(centerBoxX, centerBoxY, cellSize, cellSize, true, true);
-        centerBox.setFullRewindTracking(true);
+        centerBox.setFullRewindTracking(true); // Enable full path tracking during rewind
+        // Note: isRewinding is false by default, allowing pickup even during rewind
         level.addEntity(centerBox, centerBoxGridX, centerBoxGridY);
         
         // Second box in the middle of the right bottom room
@@ -652,7 +654,8 @@ public class PlayState extends GameState {
         float rightRoomBoxX = level.getGrid().gridToScreenX(rightRoomBoxGridX);
         float rightRoomBoxY = level.getGrid().gridToScreenY(rightRoomBoxGridY);
         Box rightRoomBox = new Box(rightRoomBoxX, rightRoomBoxY, cellSize, cellSize, true, true);
-        rightRoomBox.setFullRewindTracking(true);
+        rightRoomBox.setFullRewindTracking(true); // Enable full path tracking during rewind
+        // Note: isRewinding is false by default, allowing pickup even during rewind
         level.addEntity(rightRoomBox, rightRoomBoxGridX, rightRoomBoxGridY);
         
         // Add fourth button inside top right room (controls left bottom room door)
@@ -693,11 +696,19 @@ public class PlayState extends GameState {
         // Create a multi-button action for the end door
         DoorAction endDoorAction = new DoorAction("end_door");
         endDoorAction.setDoorStateChangeListener(doorController);
-        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, false); // false = not permanent
+        MultiButtonAction endDoorMultiAction = new MultiButtonAction(endDoorAction, true); // true = permanent activation - door stays open once activated
         
-        // Create timed actions for both blue buttons
-        TimedAction blueButton1Action = createTimedButtonAction("blue_button1", 1000); // 1 second
-        TimedAction blueButton2Action = createTimedButtonAction("blue_button2", 1000); // 1 second
+        // Add both blue buttons as required buttons to the MultiButtonAction
+        endDoorMultiAction.addRequiredButton("blue_button1");
+        endDoorMultiAction.addRequiredButton("blue_button2");
+        
+        // Create button actions that will update the MultiButtonAction
+        ButtonUpdateAction blueButton1UpdateAction = new ButtonUpdateAction("blue_button1", endDoorMultiAction);
+        ButtonUpdateAction blueButton2UpdateAction = new ButtonUpdateAction("blue_button2", endDoorMultiAction);
+        
+        // Create timed actions that wrap the button update actions
+        TimedAction blueButton1Action = new TimedAction(blueButton1UpdateAction, 1000); // 1 second
+        TimedAction blueButton2Action = new TimedAction(blueButton2UpdateAction, 1000); // 1 second
         
         // Set the actions for the blue buttons
         blueButton1.setAction(blueButton1Action);
