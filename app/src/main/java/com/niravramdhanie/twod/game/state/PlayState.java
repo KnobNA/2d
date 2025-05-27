@@ -40,7 +40,7 @@ public class PlayState extends GameState {
     
     // Timer variables
     private long startTime;
-    private int timerDuration = 60; // Duration in seconds
+    private int timerDuration = 45; // Duration in seconds
     private Font timerFont;
     
     // Timer manager
@@ -83,6 +83,9 @@ public class PlayState extends GameState {
     
     // Flag to track if the end door has been permanently opened
     private boolean endDoorPermanentlyOpened = false;
+    
+    // Flag to track if the room 1 doors have been permanently opened
+    private boolean room1DoorsPermanentlyOpened = false;
     
     // Store references to blue buttons
     private WeightedButton blueButton1;
@@ -638,17 +641,21 @@ public class PlayState extends GameState {
         doorController.registerDoor(rightRoomRightDoor);
         
         // Add three weighted buttons
-        // First button (top left) - controls left bottom room door
+        // First button (top left) - now a player-activated timed button instead of weighted
         int button1GridX = 3; // 3 cells from left edge
         int button1GridY = 3; // 3 cells from top
         float button1X = level.getGrid().gridToScreenX(button1GridX);
         float button1Y = level.getGrid().gridToScreenY(button1GridY);
-        button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, null);
+        
+        // Button1 doesn't need a specific action as we'll check its state directly
+        Action button1Action = null;
+        
+        // Create the weighted button that records time when activated
+        button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, button1Action);
+        button1.setColor(new Color(200, 50, 50)); // Red when inactive
+        button1.setActiveColor(new Color(255, 100, 100)); // Lighter red when active
         level.addEntity(button1, button1GridX, button1GridY);
         weightedButtons.add(button1);
-        
-        // Button1 has no direct action since door states are updated in the update loop
-        button1.setAction(null);
         
         // Second button (top right of first) - controls right bottom room door
         int button2GridX = button1GridX + 5; // 5 cells to the right of first button
@@ -693,17 +700,15 @@ public class PlayState extends GameState {
         rightRoomBox.setFullRewindTracking(true);
         level.addEntity(rightRoomBox, rightRoomBoxGridX, rightRoomBoxGridY);
         
-        // Add fourth button inside top right room (controls left bottom room door)
+        // Add fourth button inside top right room (now part of the 2-button combination)
         int button4GridX = roomStartX + 1; // 1 cell from left wall of top right room
         int button4GridY = roomStartY + 1; // 1 cell from top wall of top right room
         float button4X = level.getGrid().gridToScreenX(button4GridX);
         float button4Y = level.getGrid().gridToScreenY(button4GridY);
+        // Button4 doesn't need a specific action as we'll check its state directly
         button4 = new WeightedButton(button4X, button4Y, cellSize, cellSize, null);
         level.addEntity(button4, button4GridX, button4GridY);
         weightedButtons.add(button4);
-        
-        // Button4 has no direct action since door states are updated in the update loop
-        button4.setAction(null);
         
         // Add two blue weighted buttons for end door control
         // First blue button (top right of top right room)
@@ -869,14 +874,23 @@ public class PlayState extends GameState {
         // Check if both blue buttons are pressed simultaneously
         checkBlueButtonsForEndDoor();
         
-        // Update the left room triple door state based on button1 and button4
-        boolean leftRoomDoorsOpen = button1.isActivated() || button4.isActivated();
+        // Check if the doors in room 1 should be permanently opened
+        if (!room1DoorsPermanentlyOpened) {
+            // Check if both buttons are activated simultaneously
+            if (button1 != null && button4 != null && button1.isActivated() && button4.isActivated()) {
+                room1DoorsPermanentlyOpened = true;
+                System.out.println("Room 1 doors permanently opened because both buttons were pressed simultaneously!");
+            }
+        }
         
-        if (leftRoomDoorsOpen) {
+        // Update the left room triple door state
+        if (room1DoorsPermanentlyOpened) {
+            // If doors have been permanently opened, keep them open
             doorController.openDoor("left_room_door");
             doorController.openDoor("left_room_door_left");
             doorController.openDoor("left_room_door_right");
         } else {
+            // Otherwise, doors stay closed
             doorController.closeDoor("left_room_door");
             doorController.closeDoor("left_room_door_left");
             doorController.closeDoor("left_room_door_right");
