@@ -1619,6 +1619,25 @@ public class PlayState extends GameState {
             rewindManager.toggleRewind();
         }
         
+        // Handle level reset with 'T' key (works at any time)
+        if (k == KeyEvent.VK_T) {
+            System.out.println("Resetting current level");
+            
+            // Reset the current level by reloading it
+            setLevelLayout(currentLevel);
+            
+            // Drop any carried box
+            if (carriedBox != null) {
+                dropCarriedBox();
+            }
+            
+            // Reset any permanent states for the current level
+            if (currentLevel == 3) {
+                endDoorPermanentlyOpened = false;
+                room1DoorsPermanentlyOpened = false;
+            }
+        }
+        
         // Level switching shortcuts
         if (k == KeyEvent.VK_1) {
             System.out.println("Switching to level 1");
