@@ -81,6 +81,12 @@ public class PlayState extends GameState {
     // Add this field at the class level
     private List<WeightedButton> weightedButtons = new ArrayList<>();
     
+    // Level 3 buttons that control doors
+    private WeightedButton button1;
+    private WeightedButton button2;
+    private WeightedButton button3;
+    private WeightedButton button4;
+
     public PlayState(GameStateManager gsm, int screenWidth, int screenHeight) {
         super(gsm);
         this.screenWidth = screenWidth;
@@ -460,10 +466,10 @@ public class PlayState extends GameState {
             level.addEntity(block, x, roomStartY + 5);
         }
         
-        // Left wall (with door opening)
+        // Left wall (with three doors in a row)
         for (int y = roomStartY; y < roomStartY + 6; y++) {
-            // Skip the middle block for the door
-            if (y == roomStartY + 3) continue;
+            // Skip blocks for the three doors (the original middle door and two adjacent doors)
+            if (y == roomStartY + 2 || y == roomStartY + 3 || y == roomStartY + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(roomStartX);
             float blockY = level.getGrid().gridToScreenY(y);
@@ -479,7 +485,8 @@ public class PlayState extends GameState {
             level.addEntity(block, roomStartX + 5, y);
         }
         
-        // Add a door to the room (on the left wall)
+        // Add three doors to the room (on the left wall)
+        // Central door (original)
         int roomDoorGridX = roomStartX;
         int roomDoorGridY = roomStartY + 3; // Middle of left wall
         float roomDoorX = level.getGrid().gridToScreenX(roomDoorGridX);
@@ -488,16 +495,30 @@ public class PlayState extends GameState {
         level.addEntity(roomDoor, roomDoorGridX, roomDoorGridY);
         doorController.registerDoor(roomDoor);
         
+        // Upper adjacent door
+        int roomUpperDoorGridY = roomStartY + 2;
+        float roomUpperDoorY = level.getGrid().gridToScreenY(roomUpperDoorGridY);
+        Door roomUpperDoor = new Door(roomDoorX, roomUpperDoorY, cellSize, cellSize, "room_door_upper");
+        level.addEntity(roomUpperDoor, roomDoorGridX, roomUpperDoorGridY);
+        doorController.registerDoor(roomUpperDoor);
+        
+        // Lower adjacent door
+        int roomLowerDoorGridY = roomStartY + 4;
+        float roomLowerDoorY = level.getGrid().gridToScreenY(roomLowerDoorGridY);
+        Door roomLowerDoor = new Door(roomDoorX, roomLowerDoorY, cellSize, cellSize, "room_door_lower");
+        level.addEntity(roomLowerDoor, roomDoorGridX, roomLowerDoorGridY);
+        doorController.registerDoor(roomLowerDoor);
+        
         // Create two connected rooms at the bottom left (shifted left by one tile)
         // First room (left room)
         int leftRoomStartX = 1; // 1 cell from left edge (shifted left)
         int leftRoomStartY = verticalCells - 8; // 6 cells from bottom edge
         
         // Create left room walls
-        // Top wall (with door)
+        // Top wall (with three doors in a row)
         for (int x = leftRoomStartX; x < leftRoomStartX + 6; x++) {
-            // Skip the middle block for the door
-            if (x == leftRoomStartX + 3) continue;
+            // Skip blocks for the three doors (the original middle door and two adjacent doors)
+            if (x == leftRoomStartX + 2 || x == leftRoomStartX + 3 || x == leftRoomStartX + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(leftRoomStartY);
@@ -529,7 +550,8 @@ public class PlayState extends GameState {
             level.addEntity(block, leftRoomStartX + 6, y);
         }
         
-        // Add door to left room (on top wall)
+        // Add three doors to left room (on top wall)
+        // Central door (original)
         int leftRoomDoorGridX = leftRoomStartX + 3;
         int leftRoomDoorGridY = leftRoomStartY;
         float leftRoomDoorX = level.getGrid().gridToScreenX(leftRoomDoorGridX);
@@ -538,15 +560,29 @@ public class PlayState extends GameState {
         level.addEntity(leftRoomDoor, leftRoomDoorGridX, leftRoomDoorGridY);
         doorController.registerDoor(leftRoomDoor);
         
+        // Left adjacent door
+        int leftRoomLeftDoorGridX = leftRoomStartX + 2;
+        float leftRoomLeftDoorX = level.getGrid().gridToScreenX(leftRoomLeftDoorGridX);
+        Door leftRoomLeftDoor = new Door(leftRoomLeftDoorX, leftRoomDoorY, cellSize, cellSize, "left_room_door_left");
+        level.addEntity(leftRoomLeftDoor, leftRoomLeftDoorGridX, leftRoomDoorGridY);
+        doorController.registerDoor(leftRoomLeftDoor);
+        
+        // Right adjacent door
+        int leftRoomRightDoorGridX = leftRoomStartX + 4;
+        float leftRoomRightDoorX = level.getGrid().gridToScreenX(leftRoomRightDoorGridX);
+        Door leftRoomRightDoor = new Door(leftRoomRightDoorX, leftRoomDoorY, cellSize, cellSize, "left_room_door_right");
+        level.addEntity(leftRoomRightDoor, leftRoomRightDoorGridX, leftRoomDoorGridY);  
+        doorController.registerDoor(leftRoomRightDoor);
+        
         // Second room (right room)
         int rightRoomStartX = leftRoomStartX + 6; // Connected to left room
         int rightRoomStartY = leftRoomStartY; // Same Y as left room
         
         // Create right room walls
-        // Top wall (with door)
+        // Top wall (with three doors in a row)
         for (int x = rightRoomStartX; x < rightRoomStartX + 6; x++) {
-            // Skip the middle block for the door
-            if (x == rightRoomStartX + 3) continue;
+            // Skip blocks for the three doors (the original middle door and two adjacent doors)
+            if (x == rightRoomStartX + 2 || x == rightRoomStartX + 3 || x == rightRoomStartX + 4) continue;
             
             float blockX = level.getGrid().gridToScreenX(x);
             float blockY = level.getGrid().gridToScreenY(rightRoomStartY);
@@ -570,7 +606,8 @@ public class PlayState extends GameState {
             level.addEntity(block, rightRoomStartX + 6, y);
         }
         
-        // Add door to right room (on top wall)
+        // Add three doors to right room (on top wall)
+        // Central door (original)
         int rightRoomDoorGridX = rightRoomStartX + 3;
         int rightRoomDoorGridY = rightRoomStartY;
         float rightRoomDoorX = level.getGrid().gridToScreenX(rightRoomDoorGridX);
@@ -579,48 +616,56 @@ public class PlayState extends GameState {
         level.addEntity(rightRoomDoor, rightRoomDoorGridX, rightRoomDoorGridY);
         doorController.registerDoor(rightRoomDoor);
         
+        // Left adjacent door
+        int rightRoomLeftDoorGridX = rightRoomStartX + 2;
+        float rightRoomLeftDoorX = level.getGrid().gridToScreenX(rightRoomLeftDoorGridX);
+        Door rightRoomLeftDoor = new Door(rightRoomLeftDoorX, rightRoomDoorY, cellSize, cellSize, "right_room_door_left");
+        level.addEntity(rightRoomLeftDoor, rightRoomLeftDoorGridX, rightRoomDoorGridY);
+        doorController.registerDoor(rightRoomLeftDoor);
+        
+        // Right adjacent door
+        int rightRoomRightDoorGridX = rightRoomStartX + 4;
+        float rightRoomRightDoorX = level.getGrid().gridToScreenX(rightRoomRightDoorGridX);
+        Door rightRoomRightDoor = new Door(rightRoomRightDoorX, rightRoomDoorY, cellSize, cellSize, "right_room_door_right");
+        level.addEntity(rightRoomRightDoor, rightRoomRightDoorGridX, rightRoomDoorGridY);
+        doorController.registerDoor(rightRoomRightDoor);
+        
         // Add three weighted buttons
         // First button (top left) - controls left bottom room door
         int button1GridX = 3; // 3 cells from left edge
         int button1GridY = 3; // 3 cells from top
         float button1X = level.getGrid().gridToScreenX(button1GridX);
         float button1Y = level.getGrid().gridToScreenY(button1GridY);
-        WeightedButton button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, null);
+        button1 = new WeightedButton(button1X, button1Y, cellSize, cellSize, null);
         level.addEntity(button1, button1GridX, button1GridY);
         weightedButtons.add(button1);
         
-        // Create door action for left bottom room
-        DoorAction leftRoomDoorAction = new DoorAction("left_room_door");
-        leftRoomDoorAction.setDoorStateChangeListener(doorController);
-        button1.setAction(leftRoomDoorAction);
+        // Button1 has no direct action since door states are updated in the update loop
+        button1.setAction(null);
         
         // Second button (top right of first) - controls right bottom room door
         int button2GridX = button1GridX + 5; // 5 cells to the right of first button
         int button2GridY = button1GridY; // Same Y as first button
         float button2X = level.getGrid().gridToScreenX(button2GridX);
         float button2Y = level.getGrid().gridToScreenY(button2GridY);
-        WeightedButton button2 = new WeightedButton(button2X, button2Y, cellSize, cellSize, null);
+        button2 = new WeightedButton(button2X, button2Y, cellSize, cellSize, null);
         level.addEntity(button2, button2GridX, button2GridY);
         weightedButtons.add(button2);
         
-        // Create door action for right bottom room
-        DoorAction rightRoomDoorAction = new DoorAction("right_room_door");
-        rightRoomDoorAction.setDoorStateChangeListener(doorController);
-        button2.setAction(rightRoomDoorAction);
+        // Button2 has no direct action since door states are updated in the update loop
+        button2.setAction(null);
         
         // Third button (bottom right) - controls top right room door
         int button3GridX = horizontalCells - 4; // 4 cells from right edge
         int button3GridY = verticalCells - 4; // 4 cells from bottom
         float button3X = level.getGrid().gridToScreenX(button3GridX);
         float button3Y = level.getGrid().gridToScreenY(button3GridY);
-        WeightedButton button3 = new WeightedButton(button3X, button3Y, cellSize, cellSize, null);
+        button3 = new WeightedButton(button3X, button3Y, cellSize, cellSize, null);
         level.addEntity(button3, button3GridX, button3GridY);
         weightedButtons.add(button3);
         
-        // Create door action for top right room
-        DoorAction topRoomDoorAction = new DoorAction("room_door");
-        topRoomDoorAction.setDoorStateChangeListener(doorController);
-        button3.setAction(topRoomDoorAction);
+        // Button3 has no direct action since door states are updated in the update loop
+        button3.setAction(null);
         
         // Add two movable boxes
         // First box in the middle of the level
@@ -646,12 +691,12 @@ public class PlayState extends GameState {
         int button4GridY = roomStartY + 1; // 1 cell from top wall of top right room
         float button4X = level.getGrid().gridToScreenX(button4GridX);
         float button4Y = level.getGrid().gridToScreenY(button4GridY);
-        WeightedButton button4 = new WeightedButton(button4X, button4Y, cellSize, cellSize, null);
+        button4 = new WeightedButton(button4X, button4Y, cellSize, cellSize, null);
         level.addEntity(button4, button4GridX, button4GridY);
         weightedButtons.add(button4);
         
-        // Connect button4 to the same door as button1 (left bottom room door)
-        button4.setAction(leftRoomDoorAction);
+        // Button4 has no direct action since door states are updated in the update loop
+        button4.setAction(null);
         
         // Add two blue weighted buttons for end door control
         // First blue button (top right of top right room)
@@ -696,8 +741,18 @@ public class PlayState extends GameState {
         // Start with all doors closed
         door.close();
         roomDoor.close();
+        // Close all three doors in the left room
         leftRoomDoor.close();
+        leftRoomLeftDoor.close();
+        leftRoomRightDoor.close();
+        // Close all three doors in the right room
         rightRoomDoor.close();
+        rightRoomLeftDoor.close();
+        rightRoomRightDoor.close();
+        // Close all three doors in the top room
+        roomDoor.close();
+        roomUpperDoor.close();
+        roomLowerDoor.close();
         
         // Update the rewind manager with the boxes
         updateRewindManager();
@@ -793,38 +848,83 @@ public class PlayState extends GameState {
         System.out.println("Reset player position to: " + playerX + "," + playerY);
     }
     
-    // Flag to track if timer was just reset (to prevent immediate game over)
-    private boolean timerJustReset = false;
+    /**
+     * Updates the states of all doors based on weighted button activation
+     */
+    private void updateDoorStates() {
+        // Don't update if buttons aren't initialized yet
+        if (button1 == null || button2 == null || button3 == null || button4 == null) return;
+        
+        // Update the left room triple door state based on button1 and button4
+        boolean leftRoomDoorsOpen = button1.isActivated() || button4.isActivated();
+        
+        if (leftRoomDoorsOpen) {
+            doorController.openDoor("left_room_door");
+            doorController.openDoor("left_room_door_left");
+            doorController.openDoor("left_room_door_right");
+        } else {
+            doorController.closeDoor("left_room_door");
+            doorController.closeDoor("left_room_door_left");
+            doorController.closeDoor("left_room_door_right");
+        }
+        
+        // Update the right room triple door state based on button2
+        if (button2.isActivated()) {
+            doorController.openDoor("right_room_door");
+            doorController.openDoor("right_room_door_left");
+            doorController.openDoor("right_room_door_right");
+        } else {
+            doorController.closeDoor("right_room_door");
+            doorController.closeDoor("right_room_door_left");
+            doorController.closeDoor("right_room_door_right");
+        }
+        
+        // Update the top room triple door state based on button3
+        if (button3.isActivated()) {
+            doorController.openDoor("room_door");
+            doorController.openDoor("room_door_upper");
+            doorController.openDoor("room_door_lower");
+        } else {
+            doorController.closeDoor("room_door");
+            doorController.closeDoor("room_door_upper");
+            doorController.closeDoor("room_door_lower");
+        }
+    }
     
     @Override
     public void update() {
         if (!initialized) return;
-        
         try {
             // Update timer
             timerManager.update();
             
-            // If timer was just reset, clear the flag and don't check game over this frame
-            if (timerJustReset) {
-                timerJustReset = false;
-                System.out.println("Timer was just reset, skipping game over check this frame");
-            }
-            // Otherwise check for game over condition
-            else if (!gameOver && timerManager.getTime() <= 0) {
+            // Update door states based on button activation
+            updateDoorStates();
+            
+            // Check for game over condition
+            if (!gameOver && timerManager.getTime() <= 0) {
                 gameOver = true;
                 player.triggerExplosion();
-                
-                // Stop player movement when game is over
+            }
+            
+            // If game over and explosion finished, return to home screen
+            if (gameOver && player.isExplosionFinished()) {
+                // Reactivate player movement
                 player.setLeft(false);
                 player.setRight(false);
                 player.setUp(false);
                 player.setDown(false);
+                
+                // Reset game over state
+                gameOver = false;
+                
+                // Return to menu state
+                gsm.setState(GameStateManager.MENU_STATE);
+                return;
             }
             
             // Don't update game state if game over
             if (gameOver) {
-                // No longer automatically transition to menu
-                // The player can press 'T' to restart the level
                 return;
             }
             
@@ -1133,9 +1233,6 @@ public class PlayState extends GameState {
             // Draw rewind status indicator
             drawRewindStatusIndicator(g);
             
-            // Draw the game over screen if game is over
-            renderGameOver(g);
-            
         } catch (Exception e) {
             System.err.println("Error in PlayState.render(): " + e.getMessage());
             e.printStackTrace();
@@ -1157,49 +1254,6 @@ public class PlayState extends GameState {
     }
     
     /**
-     * Renders the "You Died" message when game is over
-     */
-    private void renderGameOver(Graphics2D g) {
-        if (!gameOver) return;
-        
-        // Save original settings
-        Color originalColor = g.getColor();
-        Font originalFont = g.getFont();
-        
-        // Create semi-transparent overlay
-        g.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
-        g.fillRect(0, 0, screenWidth, screenHeight);
-        
-        // Draw "You Died" text
-        g.setColor(Color.RED);
-        g.setFont(new Font("Arial", Font.BOLD, 72));
-        String gameOverText = "You Died";
-        
-        // Center the text
-        int textWidth = g.getFontMetrics().stringWidth(gameOverText);
-        int x = (screenWidth - textWidth) / 2;
-        int y = screenHeight / 2;
-        
-        g.drawString(gameOverText, x, y);
-        
-        // Draw restart instruction
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 24));
-        String restartText = "Press 'T' to restart";
-        
-        // Center the instruction text
-        textWidth = g.getFontMetrics().stringWidth(restartText);
-        x = (screenWidth - textWidth) / 2;
-        y += 50; // Below the "You Died" text
-        
-        g.drawString(restartText, x, y);
-        
-        // Restore original settings
-        g.setColor(originalColor);
-        g.setFont(originalFont);
-    }
-    
-    /**
      * Draws an indicator showing the current rewind state
      */
     private void drawRewindStatusIndicator(Graphics2D g) {
@@ -1213,23 +1267,27 @@ public class PlayState extends GameState {
         g.setFont(new Font("Arial", Font.BOLD, 16));
         int y = screenHeight - 40;
         
-        // Create triangle points for the recording indicator
-        int[] xPoints = {10, 25, 10};
-        int[] yPoints = {y, y + 7, y + 15};
-        
         // Draw different indicators based on rewind state
         switch (rewindManager.getCurrentState()) {
             case RECORDING:
                 // Red recording indicator
                 g.setColor(Color.RED);
-                g.fillPolygon(xPoints, yPoints, 3);
+                g.fillOval(10, y, 15, 15);
                 g.drawString("Recording", 30, y + 12);
                 break;
                 
             case REWINDING:
-                // Blue rewinding indicator
-                g.setColor(Color.BLUE);
+                // Flashing blue rewind indicator
+                if ((System.currentTimeMillis() / 250) % 2 == 0) {
+                    g.setColor(Color.BLUE);
+                } else {
+                    g.setColor(Color.CYAN);
+                }
+                
+                int[] xPoints = {20, 5, 5};
+                int[] yPoints = {y + 7, y, y + 15};
                 g.fillPolygon(xPoints, yPoints, 3);
+                
                 g.drawString("Rewinding", 30, y + 12);
                 break;
                 
@@ -1474,36 +1532,8 @@ public class PlayState extends GameState {
     
     @Override
     public void keyPressed(int k) {
-        // Special case for game over: only allow the restart key (T)
-        if (gameOver) {
-            if (k == KeyEvent.VK_T) {
-                // First explicitly reset the timer to make sure it's not at zero
-                if (timerManager != null) {
-                    timerManager.reset();
-                    timerManager.start();
-                    // Set the flag to prevent immediate game over
-                    timerJustReset = true;
-                    System.out.println("Timer reset to: " + timerManager.getTime() + " seconds");
-                }
-                
-                // Reset game over state
-                gameOver = false;
-                System.out.println("Game over state reset to: " + gameOver);
-                
-                // Reset the current level (this will reinitialize the player)
-                setLevelLayout(currentLevel);
-                
-                // Make sure the player is no longer exploding after level reset
-                if (player != null) {
-                    player.resetAfterExplosion();
-                    System.out.println("Player explosion state reset");
-                }
-                
-                System.out.println("Level restarted after game over");
-            }
-            // Ignore all other input during game over
-            return;
-        }
+        // Don't process input if game over
+        if (gameOver) return;
         
         // Handle player movement
         if (player != null) {
