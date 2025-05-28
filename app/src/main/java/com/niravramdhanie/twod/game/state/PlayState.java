@@ -4,8 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.event.KeyEvent;
 import java.awt.RenderingHints;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -96,6 +96,9 @@ public class PlayState extends GameState {
     
     // Flag to track if the room 1 doors have been permanently opened
     private boolean room1DoorsPermanentlyOpened = false;
+    
+    // Flag to track if the player has won the game
+    private boolean playerWon = false;
     
     // Store references to blue buttons
     private WeightedButton blueButton1;
@@ -1260,6 +1263,12 @@ public class PlayState extends GameState {
                 } else if (currentLevel == 2 && currentDoor.getId().equals("door3")) {
                     System.out.println("Player entered the level transition door! Transitioning to level 3...");
                     setLevelLayout(3);
+                } else if (currentLevel == 3 && currentDoor.getId().equals("end_door")) {
+                    System.out.println("Player entered the end door! You win!");
+                    playerWon = true;
+                    if (timerManager != null) {
+                        timerManager.stop();
+                    }
                 }
             }
         }
@@ -1360,9 +1369,11 @@ public class PlayState extends GameState {
             // Draw rewind status indicator
             drawRewindStatusIndicator(g);
             
-            // Draw game over screen if game is over
+            // Draw game over or win screen
             if (gameOver) {
                 drawGameOverScreen(g);
+            } else if (playerWon) {
+                drawWinMessage(g);
             }
             
         } catch (Exception e) {
@@ -1804,5 +1815,26 @@ public class PlayState extends GameState {
     @Override
     public void mouseMoved(int x, int y) {
         // Not used in this example
+    }
+    
+    /**
+     * Draws the win message in the center of the screen
+     */
+    private void drawWinMessage(Graphics2D g) {
+        // Save original font and color
+        Font originalFont = g.getFont();
+        Color originalColor = g.getColor();
+        
+        // Set up the win message
+        g.setFont(new Font("Arial", Font.BOLD, 72));
+        g.setColor(Color.GREEN);
+        
+        String winText = "You Win!";
+        int textWidth = g.getFontMetrics().stringWidth(winText);
+        g.drawString(winText, (screenWidth - textWidth) / 2, screenHeight / 2);
+        
+        // Restore original font and color
+        g.setFont(originalFont);
+        g.setColor(originalColor);
     }
 }
