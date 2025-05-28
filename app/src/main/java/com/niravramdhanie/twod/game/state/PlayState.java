@@ -960,22 +960,12 @@ public class PlayState extends GameState {
             if (!gameOver && timerManager.getTime() <= 0) {
                 gameOver = true;
                 player.triggerExplosion();
-            }
-            
-            // If game over and explosion finished, return to home screen
-            if (gameOver && player.isExplosionFinished()) {
-                // Reactivate player movement
+                
+                // Halt player movement when game over occurs
                 player.setLeft(false);
                 player.setRight(false);
                 player.setUp(false);
                 player.setDown(false);
-                
-                // Reset game over state
-                gameOver = false;
-                
-                // Return to menu state
-                gsm.setState(GameStateManager.MENU_STATE);
-                return;
             }
             
             // Don't update game state if game over
@@ -1288,6 +1278,11 @@ public class PlayState extends GameState {
             // Draw rewind status indicator
             drawRewindStatusIndicator(g);
             
+            // Draw game over screen if game is over
+            if (gameOver) {
+                drawGameOverScreen(g);
+            }
+            
         } catch (Exception e) {
             System.err.println("Error in PlayState.render(): " + e.getMessage());
             e.printStackTrace();
@@ -1296,6 +1291,39 @@ public class PlayState extends GameState {
             g.setColor(Color.RED);
             g.drawString("Render Error: " + e.getMessage(), 10, 20);
         }
+    }
+    
+    /**
+     * Draws the game over screen with a message
+     * 
+     * @param g The Graphics2D object to render to
+     */
+    private void drawGameOverScreen(Graphics2D g) {
+        // Semi-transparent overlay
+        g.setColor(new Color(0, 0, 0, 180)); // Black with 70% opacity
+        g.fillRect(0, 0, screenWidth, screenHeight);
+        
+        // Save original font and color
+        Font originalFont = g.getFont();
+        Color originalColor = g.getColor();
+        
+        // Draw game over text
+        g.setFont(new Font("Arial", Font.BOLD, 48));
+        g.setColor(Color.RED);
+        String gameOverText = "Youd Died!";
+        int textWidth = g.getFontMetrics().stringWidth(gameOverText);
+        g.drawString(gameOverText, (screenWidth - textWidth) / 2, screenHeight / 2 - 30);
+        
+        // Draw restart instruction text
+        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        g.setColor(Color.WHITE);
+        String instructionText = "Press 'T' to restart";
+        textWidth = g.getFontMetrics().stringWidth(instructionText);
+        g.drawString(instructionText, (screenWidth - textWidth) / 2, screenHeight / 2 + 30);
+        
+        // Restore original font and color
+        g.setFont(originalFont);
+        g.setColor(originalColor);
     }
     
     /**
@@ -1587,7 +1615,37 @@ public class PlayState extends GameState {
     
     @Override
     public void keyPressed(int k) {
-        // Don't process input if game over
+        // Handle level reset with 'T' key (works even during game over)
+        if (k == KeyEvent.VK_T) {
+            System.out.println("Resetting current level");
+            
+            // Reset the current level by reloading it
+            setLevelLayout(currentLevel);
+            
+            // Drop any carried box
+            if (carriedBox != null) {
+                dropCarriedBox();
+            }
+            
+            // Reset any permanent states for the current level
+            if (currentLevel == 3) {
+                endDoorPermanentlyOpened = false;
+                room1DoorsPermanentlyOpened = false;
+            }
+            
+            // If we're in game over, reset that state too
+            if (gameOver) {
+                gameOver = false;
+                // Restore player to normal state if needed
+                if (player != null) {
+                    player.resetAfterExplosion();
+                }
+            }
+            
+            return; // Return after handling T key to avoid other key processing during game over
+        }
+        
+        // Don't process other input if game over
         if (gameOver) return;
         
         // Handle player movement
@@ -1620,25 +1678,6 @@ public class PlayState extends GameState {
         // Handle rewind feature with 'R' key
         if (k == KeyEvent.VK_R && rewindEnabled && rewindManager != null) {
             rewindManager.toggleRewind();
-        }
-        
-        // Handle level reset with 'T' key (works at any time)
-        if (k == KeyEvent.VK_T) {
-            System.out.println("Resetting current level");
-            
-            // Reset the current level by reloading it
-            setLevelLayout(currentLevel);
-            
-            // Drop any carried box
-            if (carriedBox != null) {
-                dropCarriedBox();
-            }
-            
-            // Reset any permanent states for the current level
-            if (currentLevel == 3) {
-                endDoorPermanentlyOpened = false;
-                room1DoorsPermanentlyOpened = false;
-            }
         }
         
         // Level switching shortcuts
