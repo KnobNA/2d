@@ -40,7 +40,7 @@ public class PlayState extends GameState {
     
     // Timer variables
     private long startTime;
-    private int timerDuration = 60; // Duration in seconds
+    private int timerDuration = 5; // Duration in seconds
     private Font timerFont;
     
     // Timer manager
