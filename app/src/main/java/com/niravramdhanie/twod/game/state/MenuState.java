@@ -28,7 +28,7 @@ public class MenuState extends GameState {
         super(gsm);
         this.screenWidth = gsm.getWidth();
         this.screenHeight = gsm.getHeight();
-        title = "My 2D Game";
+        title = "Tenet";
         titleFont = new Font("Arial", Font.BOLD, 48);
         buttonFont = new Font("Arial", Font.PLAIN, 24);
         buttons = new ArrayList<>();
