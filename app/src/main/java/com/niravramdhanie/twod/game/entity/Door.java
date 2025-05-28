@@ -52,11 +52,32 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
         this.cellSize = width; // Assuming square cells
         
         try {
-            // Load door images
-            doorImage = ResourceLoader.loadImage("/sprites/door_closed.png");
-            doorOpenImage = ResourceLoader.loadImage("/sprites/door_open.png");
+            // Load door images - using the same image for both states for now
+            String[] possiblePaths = {
+                "sprites/door.png",
+                "/sprites/door.png",
+                "resources/sprites/door.png",
+                "/resources/sprites/door.png"
+            };
+            
+            for (String path : possiblePaths) {
+                System.out.println("Trying to load door texture from: " + path);
+                doorImage = ResourceLoader.loadImage(path);
+                if (doorImage != null) {
+                    System.out.println("Successfully loaded door texture from: " + path);
+                    break;
+                }
+            }
+            
+            // Use the same image for both states for now
+            doorOpenImage = doorImage;
+            
+            if (doorImage == null) {
+                System.err.println("Failed to load door texture from all possible paths!");
+            }
         } catch (Exception e) {
             System.err.println("Error loading door images: " + e.getMessage());
+            e.printStackTrace();
             doorImage = null;
             doorOpenImage = null;
         }
@@ -85,11 +106,32 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
         this.obeyGridSystem = obeyGridSystem;
         
         try {
-            // Load door images
-            doorImage = ResourceLoader.loadImage("/sprites/door_closed.png");
-            doorOpenImage = ResourceLoader.loadImage("/sprites/door_open.png");
+            // Load door images - using the same image for both states for now
+            String[] possiblePaths = {
+                "sprites/door.png",
+                "/sprites/door.png",
+                "resources/sprites/door.png",
+                "/resources/sprites/door.png"
+            };
+            
+            for (String path : possiblePaths) {
+                System.out.println("Trying to load door texture from: " + path);
+                doorImage = ResourceLoader.loadImage(path);
+                if (doorImage != null) {
+                    System.out.println("Successfully loaded door texture from: " + path);
+                    break;
+                }
+            }
+            
+            // Use the same image for both states for now
+            doorOpenImage = doorImage;
+            
+            if (doorImage == null) {
+                System.err.println("Failed to load door texture from all possible paths!");
+            }
         } catch (Exception e) {
             System.err.println("Error loading door images: " + e.getMessage());
+            e.printStackTrace();
             doorImage = null;
             doorOpenImage = null;
         }
@@ -107,21 +149,51 @@ public class Door extends Block implements DoorAction.DoorStateChangeListener {
     
     @Override
     public void render(Graphics2D g) {
-        if (doorImage != null && doorOpenImage != null && gridWidth == 1 && gridHeight == 1) {
-            // Render using images - only for standard 1x1 doors
+        if (doorImage != null && doorOpenImage != null) {
+            // Save the original transform
+            java.awt.geom.AffineTransform originalTransform = g.getTransform();
+            
+            // Render using images for both single and multi-cell doors
+            BufferedImage currentImage = isOpen ? doorOpenImage : doorImage;
+            
+            if (gridWidth == 1 && gridHeight == 1) {
+                // Single cell door - draw with 180 degree rotation
+                g.translate(position.x + width, position.y + height); // Move to bottom-right corner
+                g.rotate(Math.PI); // Rotate 180 degrees
+                g.drawImage(currentImage, 0, 0, width, height, null);
+            } else {
+                // Multi-cell door - tile the texture with 180 degree rotation
+                int tileSize = Math.min(width / gridWidth, height / gridHeight);
+                int tilesX = (width + tileSize - 1) / tileSize;
+                int tilesY = (height + tileSize - 1) / tileSize;
+                
+                // Move to bottom-right corner of the door area
+                g.translate(position.x + width, position.y + height);
+                g.rotate(Math.PI); // Rotate 180 degrees
+                
+                for (int y = 0; y < tilesY; y++) {
+                    for (int x = 0; x < tilesX; x++) {
+                        g.drawImage(currentImage, 
+                                 x * tileSize, 
+                                 y * tileSize, 
+                                 tileSize, tileSize, null);
+                    }
+                }
+            }
+            
+            // Restore the original transform
+            g.setTransform(originalTransform);
+            
+            // Draw open indicators if the door is open
             if (isOpen) {
-                g.drawImage(doorOpenImage, (int)position.x, (int)position.y, width, height, null);
-                // Draw open indicator
                 if (isPermanentlyOpen) {
                     drawPermanentOpenIndicator(g);
                 } else {
                     drawOpenIndicator(g);
                 }
-            } else {
-                g.drawImage(doorImage, (int)position.x, (int)position.y, width, height, null);
             }
         } else {
-            // Fallback rendering with rectangles - always used for multi-cell doors
+            // Fallback rendering with rectangles if textures failed to load
             if (isOpen) {
                 // Draw frame but no door
                 drawDoorFrame(g);

@@ -5,9 +5,14 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import com.niravramdhanie.twod.game.actions.Action;
 import com.niravramdhanie.twod.game.actions.DoorAction;
@@ -45,6 +50,11 @@ public class PlayState extends GameState {
     
     // Timer manager
     private TimerManager timerManager;
+    
+    // Floor texture and optimization
+    private BufferedImage floorTexture;
+    private BufferedImage floorBuffer;
+    private boolean floorBufferDirty = true;
     
     // Rewind feature
     private RewindManager rewindManager;
@@ -119,6 +129,15 @@ public class PlayState extends GameState {
     @Override
     public void init() {
         System.out.println("PlayState.init() called");
+        
+        // Load floor texture
+        try {
+            floorTexture = ImageIO.read(getClass().getResourceAsStream("/backgrounds/Floor.png"));
+            System.out.println("Floor texture loaded successfully");
+        } catch (IOException e) {
+            System.err.println("Error loading floor texture: " + e.getMessage());
+            e.printStackTrace();
+        }
         
         // Create the level with a grid
         level = new Level(screenWidth, screenHeight, GRID_CELL_SIZE);
@@ -1246,14 +1265,77 @@ public class PlayState extends GameState {
         }
     }
     
+    /**
+     * Draws a tiled floor background with double buffering
+     * @param g The Graphics2D object to draw on
+     */
+    private void drawFloorBackground(Graphics2D g) {
+        if (floorTexture == null) return;
+        
+        // Initialize the buffer if needed
+        if (floorBuffer == null || 
+            floorBuffer.getWidth() != screenWidth || 
+            floorBuffer.getHeight() != screenHeight) {
+            
+            floorBuffer = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
+            floorBufferDirty = true;
+        }
+        
+        // Only redraw the buffer if something changed
+        if (floorBufferDirty) {
+            Graphics2D bg = floorBuffer.createGraphics();
+            
+            // Clear the buffer
+            bg.setColor(new Color(0, 0, 0, 0));
+            bg.fillRect(0, 0, screenWidth, screenHeight);
+            
+            // Enable antialiasing for better quality
+            bg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            bg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            
+            // Get the texture size (32x32)
+            int tileSize = 32;
+            
+            // Calculate how many tiles we need in each direction
+            int tilesX = (screenWidth + tileSize - 1) / tileSize;
+            int tilesY = (screenHeight + tileSize - 1) / tileSize;
+            
+            // Draw the tiled background
+            for (int y = 0; y < tilesY; y++) {
+                for (int x = 0; x < tilesX; x++) {
+                    bg.drawImage(floorTexture, 
+                              x * tileSize, 
+                              y * tileSize, 
+                              tileSize, 
+                              tileSize, 
+                              null);
+                }
+            }
+            
+            bg.dispose();
+            floorBufferDirty = false;
+        }
+        
+        // Draw the pre-rendered buffer
+        g.drawImage(floorBuffer, 0, 0, null);
+    }
+    
     @Override
     public void render(Graphics2D g) {
         if (!initialized) return;
         
         try {
-            // Clear the screen
+            // Enable rendering hints for better quality
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            
+            // Clear the screen with black
             g.setColor(Color.BLACK);
             g.fillRect(0, 0, screenWidth, screenHeight);
+            
+            // Draw the tiled floor background (double buffered)
+            drawFloorBackground(g);
             
             // Draw the grid (if needed for debugging)
             // level.getGrid().render(g);
