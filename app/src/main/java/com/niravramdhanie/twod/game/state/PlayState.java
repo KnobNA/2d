@@ -1310,7 +1310,7 @@ public class PlayState extends GameState {
         // Draw game over text
         g.setFont(new Font("Arial", Font.BOLD, 48));
         g.setColor(Color.RED);
-        String gameOverText = "Youd Died!";
+        String gameOverText = "You Died!";
         int textWidth = g.getFontMetrics().stringWidth(gameOverText);
         g.drawString(gameOverText, (screenWidth - textWidth) / 2, screenHeight / 2 - 30);
         
