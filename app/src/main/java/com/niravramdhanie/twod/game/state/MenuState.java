@@ -41,7 +41,7 @@ public class MenuState extends GameState {
         
         try {
             // Load resources
-            background = ResourceLoader.loadImage("/backgrounds/menu_bg.jpg");
+            background = ResourceLoader.loadImage("/backgrounds/newMenu.png");
             if (background == null) {
                 System.err.println("Failed to load menu background image!");
             } else {
