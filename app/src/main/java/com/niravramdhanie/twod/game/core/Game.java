@@ -156,17 +156,19 @@ public class Game implements Runnable {
                 needsRender = true;
             }
             
-            // Check if we need to render
+            // Render at consistent intervals for smooth display
+            // With proper double buffering, we can render more frequently without flickering
             if (needsRender || gsm.needsConstantUpdates() || forceFirstRender) {
                 forceFirstRender = false; // Reset after first forced render
                 
-                // Render at the target rate
+                // Render using the improved double buffering system
                 gamePanel.render(gsm);
                 frames++;
             } else {
-                // For static states, we can sleep a bit to reduce CPU usage
+                // For static states, we still render occasionally to handle any UI updates
+                // but at a reduced rate to save CPU
                 try {
-                    Thread.sleep(10); // Short sleep to avoid consuming CPU
+                    Thread.sleep(16); // ~60 FPS limit for static content
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -180,7 +182,7 @@ public class Game implements Runnable {
                 updates = 0;
             }
             
-            // Sleep to limit CPU usage and maintain consistent frame rate
+            // Sleep to maintain consistent frame rate and prevent excessive CPU usage
             try {
                 long elapsed = System.nanoTime() - now;
                 long sleepTime = OPTIMAL_TIME - elapsed / 1000000;
@@ -199,8 +201,16 @@ public class Game implements Runnable {
     private void stop() {
         try {
             System.out.println("Stopping game");
-            gameThread.join();
             running = false;
+            
+            // Clean up graphics resources
+            if (gamePanel != null) {
+                gamePanel.dispose();
+            }
+            
+            if (gameThread != null) {
+                gameThread.join();
+            }
         } catch (InterruptedException e) {
             System.err.println("Error stopping game: " + e.getMessage());
             e.printStackTrace();
